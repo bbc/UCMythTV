@@ -1,0 +1,13 @@
+diff --git a/mythtv/programs/mythfrontend/main.cpp b/mythtv/programs/mythfrontend/main.cpp
+index 0335dda..af8fce1 100644
+--- a/mythtv/programs/mythfrontend/main.cpp
++++ b/mythtv/programs/mythfrontend/main.cpp
+@@ -767,7 +767,7 @@ static int internal_play_media(const QString &mrl, const QString &plot,
+     else if (pginfo->IsVideo())
+         pos = pginfo->QueryBookmark();
+ 
+-    if (pos > 0)
++    if (pos > 0 && gCoreContext->GetNumSetting("VideoBookmarkPrompt",1) == 1)
+     {
+         MythScreenStack *mainStack = GetMythMainWindow()->GetMainStack();
+         BookmarkDialog *bookmarkdialog = new BookmarkDialog(pginfo, mainStack);

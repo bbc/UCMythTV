@@ -1,0 +1,406 @@
+diff --git a/mythplugins/mythgame/mythgame/gamehandler.cpp b/mythplugins/mythgame/mythgame/gamehandler.cpp
+index 630223f..8e78042 100644
+--- a/mythplugins/mythgame/mythgame/gamehandler.cpp
++++ b/mythplugins/mythgame/mythgame/gamehandler.cpp
+@@ -6,6 +6,7 @@
+ #include <QRegExp>
+ #include <QDir>
+ #include <QList>
++#include <QMutex>
+ 
+ #include <mythcontext.h>
+ #include <mythdbcon.h>
+@@ -18,6 +19,7 @@
+ #define LOC QString("MythGame:GAMEHANDLER: ")
+ 
+ static QList<GameHandler*> *handlers = NULL;
++static QMutex *game_launch_mutex = NULL;
+ 
+ bool existsHandler(const QString name)
+ {
+@@ -823,7 +825,7 @@ GameHandler* GameHandler::GetHandlerByName(QString systemname)
+ 
+ void GameHandler::Launchgame(RomInfo *romdata, QString systemname)
+ {
+-    GameHandler *handler;
++    GameHandler *handler;   
+ 
+     if (!systemname.isEmpty() && !systemname.isNull()) 
+     {
+diff --git a/mythplugins/mythgame/mythgame/gamelauncher.cpp b/mythplugins/mythgame/mythgame/gamelauncher.cpp
+new file mode 100644
+index 0000000..16cfd26
+--- /dev/null
++++ b/mythplugins/mythgame/mythgame/gamelauncher.cpp
+@@ -0,0 +1,52 @@
++#include "gamelauncher.h"
++#include "rominfo.h"
++#include "gamehandler.h"
++
++#include <QObject>
++#include <QRegExp>
++
++#include <mythcontext.h>
++#include <mythdbcon.h>
++#include <mythdialogs.h>
++#include <util.h>
++#include <mythdb.h>
++#include <mythuihelper.h>
++
++#define LOC_ERR QString("MythGame:GAMELAUNCHER Error: ")
++#define LOC QString("MythGame:GAMELAUNCHER: ")
++
++MythGameLauncher::MythGameLauncher()
++{
++    gCoreContext->addListener(this);
++}
++
++void MythGameLauncher::customEvent(QEvent *e) 
++{
++    if( e->type() != MythEvent::MythEventMessage)
++	return;
++    
++    MythEvent *me = dynamic_cast<MythEvent *>(e);
++    QString message = me->Message();
++    QStringList tokens = message.split(" ", QString::SkipEmptyParts);
++
++    if (message.left(15) == "NETWORK_CONTROL")
++    {
++	QRegExp qr = QRegExp("NETWORK_CONTROL GAME LAUNCH (\\S+)( (.+))?");
++	if(message.contains(qr))
++	{	    
++	    this->LaunchGame(qr.capturedTexts()[1], qr.capturedTexts()[3]);
++	    return;
++	}
++    }
++}
++
++void MythGameLauncher::LaunchGame(QString name, QString system="") 
++{
++    RomInfo info = RomInfo();
++    info.setGamename(name);
++    info.fillData();
++
++    VERBOSE(VB_GENERAL, LOC + QString("Rom Info %1 for game system %2").arg(info.Romname()).arg(info.Gamename()));
++    GameHandler::count();
++    GameHandler::Launchgame(&info,system);
++}
+diff --git a/mythplugins/mythgame/mythgame/gamelauncher.h b/mythplugins/mythgame/mythgame/gamelauncher.h
+new file mode 100644
+index 0000000..6fbc088
+--- /dev/null
++++ b/mythplugins/mythgame/mythgame/gamelauncher.h
+@@ -0,0 +1,19 @@
++// -*- Mode: c++ -*-
++#ifndef GAMELAUNCHER_H_
++#define GAMELAUNCHER_H_
++
++#include <QObject>
++
++class MythGameLauncher : public QObject
++{
++    Q_OBJECT
++
++  public:
++    MythGameLauncher();
++
++    void LaunchGame(QString name, QString type);
++
++    void customEvent(QEvent *event);
++};
++    
++#endif /* GAMELAUNCHER_H_ */
+diff --git a/mythplugins/mythgame/mythgame/main.cpp b/mythplugins/mythgame/mythgame/main.cpp
+index f4b23ff..297a9b5 100644
+--- a/mythplugins/mythgame/mythgame/main.cpp
++++ b/mythplugins/mythgame/mythgame/main.cpp
+@@ -11,6 +11,7 @@ using namespace std;
+ #include "rominfo.h"
+ #include "gamesettings.h"
+ #include "dbcheck.h"
++#include "gamelauncher.h"
+ 
+ #include <mythcontext.h>
+ #include <mythdbcon.h>
+@@ -23,6 +24,8 @@ using namespace std;
+ #define LOC_ERR QString("MythGame:MAIN Error: ")
+ #define LOC QString("MythGame:MAIN: ")
+ 
++MythGameLauncher *launcher;
++
+ struct GameData
+ {
+ };
+@@ -145,11 +148,18 @@ int mythplugin_init(const char *libversion)
+ //    settings.Load();
+ //    settings.Save();
+ 
++    launcher = new MythGameLauncher();
++
+     setupKeys();
+ 
+     return 0;
+ }
+ 
++void mythplugin_destroy(void) 
++{
++    delete launcher;
++}
++
+ int mythplugin_run(void)
+ {
+     return RunGames();
+diff --git a/mythplugins/mythgame/mythgame/mythgame.pro b/mythplugins/mythgame/mythgame/mythgame.pro
+index 2b934a6..a99dc3f 100644
+--- a/mythplugins/mythgame/mythgame/mythgame.pro
++++ b/mythplugins/mythgame/mythgame/mythgame.pro
+@@ -20,11 +20,11 @@ INSTALLS += target installscripts installgiantbomb installgiantbombxsl
+ 
+ # Input
+ HEADERS += gamehandler.h rominfo.h unzip.h gamesettings.h gameui.h
+-HEADERS += rom_metadata.h romedit.h gamedetails.h
++HEADERS += rom_metadata.h romedit.h gamedetails.h gamelauncher.h
+ 
+ SOURCES += main.cpp gamehandler.cpp rominfo.cpp gameui.cpp unzip.c
+ SOURCES += gamesettings.cpp dbcheck.cpp rom_metadata.cpp romedit.cpp
+-SOURCES += gamedetails.cpp
++SOURCES += gamedetails.cpp gamelauncher.cpp
+ 
+ use_hidesyms {
+     QMAKE_CXXFLAGS += -fvisibility=hidden
+diff --git a/mythtv/libs/libmythdb/mythsystem.cpp b/mythtv/libs/libmythdb/mythsystem.cpp
+index c3f8367..8d29bf5 100644
+--- a/mythtv/libs/libmythdb/mythsystem.cpp
++++ b/mythtv/libs/libmythdb/mythsystem.cpp
+@@ -48,20 +48,23 @@ typedef struct {
+     uint    result;
+     time_t  timeout;
+     bool    background;
++    bool    abortOnJump;
+ } PidData_t;
+ 
+ typedef QMap<pid_t, PidData_t *> PidMap_t;
+ 
+ class MythSystemReaper : public QThread
+ {
+-    public:
+-        void run(void);
+-        uint waitPid( pid_t pid, time_t timeout, bool background = false,
+-                      bool processEvents = true );
+-        uint abortPid( pid_t pid );
+-    private:
+-        PidMap_t    m_pidMap;
+-        QMutex      m_mapLock;
++  public:
++    void run(void);
++    uint waitPid( pid_t pid, time_t timeout, bool background = false,
++		  bool processEvents = true, bool abortOnJump = false );
++    uint abortPid( pid_t pid );
++    uint abortOnJump(void);
++
++  private:
++    PidMap_t    m_pidMap;
++    QMutex      m_mapLock;
+ };
+ 
+ static class MythSystemReaper *reaper = NULL;
+@@ -104,9 +107,9 @@ void MythSystemReaper::run(void)
+             VERBOSE(VB_GENERAL | VB_EXTRA, 
+                 QString("Child PID %1 timed out, killing")
+                 .arg(pid));
+-            kill(pid, SIGTERM);
++            kill(-pid, SIGTERM);
+             usleep(500);
+-            kill(pid, SIGKILL);
++            kill(-pid, SIGKILL);
+             pidData->ready.release(1);
+         }
+         count = m_pidMap.size();
+@@ -173,7 +176,7 @@ void MythSystemReaper::run(void)
+ }
+ 
+ uint MythSystemReaper::waitPid( pid_t pid, time_t timeout, bool background,
+-                                bool processEvents )
++                                bool processEvents, bool abortOnJump )
+ {
+     PidData_t  *pidData = new PidData_t;
+     uint        result;
+@@ -186,6 +189,7 @@ uint MythSystemReaper::waitPid( pid_t pid, time_t timeout, bool background,
+         pidData->timeout = 0;
+ 
+     pidData->background = background;
++    pidData->abortOnJump = abortOnJump;
+ 
+     pidData->ready.acquire(1);
+     m_mapLock.lock();
+@@ -231,12 +235,48 @@ uint MythSystemReaper::abortPid( pid_t pid )
+ 
+     VERBOSE(VB_GENERAL | VB_EXTRA, 
+         QString("Child PID %1 aborted, killing") .arg(pid));
+-    kill(pid, SIGTERM);
++    kill(-pid, SIGTERM);
+     usleep(500);
+-    kill(pid, SIGKILL);
++    kill(-pid, SIGKILL);
+     result = GENERIC_EXIT_ABORTED;
+     return( result );
+ }
++
++uint MythSystemReaper::abortOnJump( void ) 
++{
++    PidMap_t::iterator i,next;
++    QList<pid_t>::iterator j;
++    uint result = GENERIC_EXIT_ABORTED;
++
++    QList<pid_t> pids = QList<pid_t>();
++
++    m_mapLock.lock();
++    for( i = m_pidMap.begin(); i != m_pidMap.end(); ++i )
++    {
++	if( (i.value()->abortOnJump) )
++	{
++	    pids << i.key();
++	    VERBOSE(VB_GENERAL, QString("pid : %1 ( %2 ; %3 ; %4 )").arg(i.key()).arg(i.value()->result).arg(i.value()->timeout).arg(i.value()->background?"background":"foreground"));
++	}
++    }    
++    m_mapLock.unlock();
++
++    for( j = pids.begin(); j != pids.end(); ++j )
++    {
++	VERBOSE(VB_GENERAL, QString("SIGTERM process %1").arg(*j));
++	kill(-(*j), SIGTERM);
++    }
++
++    usleep(500);
++
++    for( j = pids.begin(); j != pids.end(); ++j )
++    {
++	VERBOSE(VB_GENERAL, QString("SIGKILL process %1").arg(*j));
++	kill(-(*j), SIGKILL);	
++    }
++
++    return result;
++}
+ #endif
+ 
+ 
+@@ -266,7 +306,8 @@ uint myth_system(const QString &command, uint flags, uint timeout)
+ 
+     if( result == GENERIC_EXIT_RUNNING )
+         result = myth_system_wait( pid, timeout, (flags & kMSRunBackground),
+-                                   (flags & kMSProcessEvents) );
++                                   (flags & kMSProcessEvents), 
++				   (flags & kMSAbortOnJump));
+ #else
+     STARTUPINFO si;
+     PROCESS_INFORMATION pi;
+@@ -400,6 +441,11 @@ pid_t myth_system_fork(const QString &command, uint &result)
+          * execl calls in the child.  It causes occasional locking issues that
+          * cause deadlocked child processes. */
+ 
++	/* Set the process group id to be the same as the pid of this child process 
++	 * This ensures that any subprocesses launched by this process can be killed
++	 * along with the process itself. */
++	setpgid(0,0);
++
+         /* Close all open file descriptors except stdout/stderr */
+         for (int i = sysconf(_SC_OPEN_MAX) - 1; i > 2; i--)
+             close(i);
+@@ -445,7 +491,7 @@ pid_t myth_system_fork(const QString &command, uint &result)
+ }
+ 
+ uint myth_system_wait(pid_t pid, uint timeout, bool background, 
+-                      bool processEvents)
++                      bool processEvents, bool abortOnJump)
+ {
+     if( reaper == NULL )
+     {
+@@ -454,7 +500,7 @@ uint myth_system_wait(pid_t pid, uint timeout, bool background,
+     }
+     VERBOSE(VB_GENERAL | VB_EXTRA, QString("PID %1: launched%2") .arg(pid)
+         .arg(background ? " in the background, not waiting" : ""));
+-    return reaper->waitPid(pid, timeout, background, processEvents);
++    return reaper->waitPid(pid, timeout, background, processEvents, abortOnJump);
+ }
+ 
+ uint myth_system_abort(pid_t pid)
+@@ -467,6 +513,17 @@ uint myth_system_abort(pid_t pid)
+     VERBOSE(VB_GENERAL | VB_EXTRA, QString("PID %1: aborted") .arg(pid));
+     return reaper->abortPid(pid);
+ }
++
++uint myth_system_abort_on_jump( void )
++{
++    if( reaper == NULL )
++    {
++	reaper = new MythSystemReaper;
++	reaper->start();
++    }
++    VERBOSE(VB_GENERAL, QString("Aborting system blocking processes"));
++    return reaper->abortOnJump();
++}
+ #endif
+ 
+ 
+diff --git a/mythtv/libs/libmythdb/mythsystem.h b/mythtv/libs/libmythdb/mythsystem.h
+index 54c9ffa..702c42c 100644
+--- a/mythtv/libs/libmythdb/mythsystem.h
++++ b/mythtv/libs/libmythdb/mythsystem.h
+@@ -13,6 +13,7 @@ typedef enum MythSystemMask {
+     kMSRunBackground            = 0x00000004, //< run child in the background
+     kMSProcessEvents            = 0x00000008, //< process events while waiting
+     kMSInUi                     = 0x00000010, //< the parent is in the UI
++    kMSAbortOnJump              = 0x00000020, //< abort this process when a jump-point is activated
+ } MythSystemFlag;
+ 
+ MPUBLIC unsigned int myth_system(const QString &command, 
+@@ -24,8 +25,9 @@ MPUBLIC void myth_system_post_flags(uint &flags);
+ #ifndef USING_MINGW
+ MPUBLIC pid_t myth_system_fork(const QString &command, uint &result);
+ MPUBLIC uint myth_system_wait(pid_t pid, uint timeout, bool background = false,
+-                              bool processEvents = true);
++                              bool processEvents = true, bool abortOnJump = false);
+ MPUBLIC uint myth_system_abort(pid_t pid);
++MPUBLIC uint myth_system_abort_on_jump( void );
+ #endif
+ 
+ #endif
+diff --git a/mythtv/libs/libmythui/mythmainwindow.cpp b/mythtv/libs/libmythui/mythmainwindow.cpp
+index 121f4c2..828bd7b 100644
+--- a/mythtv/libs/libmythui/mythmainwindow.cpp
++++ b/mythtv/libs/libmythui/mythmainwindow.cpp
+@@ -44,6 +44,7 @@ using namespace std;
+ #include "compat.h"
+ #include "mythsignalingtimer.h"
+ #include "mythcorecontext.h"
++#include "mythsystem.h"
+ 
+ // Libmythui headers
+ #include "myththemebase.h"
+@@ -1657,6 +1658,10 @@ void MythMainWindow::JumpTo(const QString& destination, bool pop)
+         screenShot();
+     else if (d->destinationMap.count(destination) > 0 && d->exitmenucallback == NULL)
+     {
++#ifndef USING_MINGW
++	myth_system_abort_on_jump();
++#endif /* USING_MINGW */
++
+         d->exitingtomain = true;
+         d->popwindows = pop;
+         d->exitmenucallback = d->destinationMap[destination].callback;
+diff --git a/mythtv/programs/mythfrontend/networkcontrol.cpp b/mythtv/programs/mythfrontend/networkcontrol.cpp
+index 0204f34..0464c1d 100644
+--- a/mythtv/programs/mythfrontend/networkcontrol.cpp
++++ b/mythtv/programs/mythfrontend/networkcontrol.cpp
+@@ -653,6 +653,11 @@ QString NetworkControl::processPlay(NetworkCommand *nc, int clientID)
+                              "%1, cannot play requested file.")
+                              .arg(GetMythUI()->GetCurrentLocation());
+         }
++    } else if ((nc->getArgCount() >= 3) &&
++	       (is_abbrev("game", nc->getArg(1))))	       
++    {
++	message = QString("NETWORK_CONTROL GAME LAUNCH %1 %2").arg(nc->getArg(2)).arg(nc->getFrom(3));
++	result = QString("OK");
+     }
+     // Everything below here requires us to be in playback mode so check to
+     // see if we are

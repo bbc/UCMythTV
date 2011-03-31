@@ -1,0 +1,44 @@
+diff --git a/mythtv/libs/libmythtv/tv_play.cpp b/mythtv/libs/libmythtv/tv_play.cpp
+index 4c4d794..f572bf1 100644
+--- a/mythtv/libs/libmythtv/tv_play.cpp
++++ b/mythtv/libs/libmythtv/tv_play.cpp
+@@ -4788,6 +4788,7 @@ void TV::ProcessNetworkControlCommand(PlayerContext *ctx,
+ 
+             ctx->LockDeletePlayer(__FILE__, __LINE__);
+             long long fplay = 0;
++	    QDateTime correctAt = QDateTime::currentDateTime().toUTC();
+             if (ctx->player)
+                 fplay = ctx->player->GetFramesPlayed();
+             ctx->UnlockDeletePlayer(__FILE__, __LINE__);
+@@ -4814,7 +4815,7 @@ void TV::ProcessNetworkControlCommand(PlayerContext *ctx,
+ 
+             if ((infoStr == "Recorded") || (infoStr == "LiveTV"))
+             {
+-                infoStr += QString(" %1 %2 %3 %4 %5 %6 %7")
++                infoStr += QString(" %1 %2 %3 %4 %5 %6 %7 (@%8)")
+                     .arg(info.text["description"])
+                     .arg(speedStr)
+                     .arg(ctx->playingInfo != NULL ?
+@@ -4822,17 +4823,19 @@ void TV::ProcessNetworkControlCommand(PlayerContext *ctx,
+                     .arg(respDate.toString(Qt::ISODate))
+                     .arg(fplay)
+                     .arg(ctx->buffer->GetFilename())
+-                    .arg(ctx->last_framerate);
++                    .arg(ctx->last_framerate)
++		    .arg(correctAt.toString("hh':'mm':'ss'.'zzz'Z'"));
+             }
+             else
+             {
+                 QString position = info.text["description"].section(" ",0,0);
+-                infoStr += QString(" %1 %2 %3 %4 %5")
++                infoStr += QString(" %1 %2 %3 %4 %5 (%6)")
+                     .arg(position)
+                     .arg(speedStr)
+                     .arg(ctx->buffer->GetFilename())
+                     .arg(fplay)
+-                    .arg(ctx->last_framerate);
++                    .arg(ctx->last_framerate)
++		    .arg(correctAt.toString("hh':'mm':'ss'.'zzz'Z'"));
+             }
+ 
+ 	    infoStr += QString(" Subtitles:");

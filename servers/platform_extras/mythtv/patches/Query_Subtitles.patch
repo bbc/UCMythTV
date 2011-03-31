@@ -1,0 +1,230 @@
+diff --git a/mythtv/libs/libmythtv/tv_play.cpp b/mythtv/libs/libmythtv/tv_play.cpp
+index e6a5510..78f4f5e 100644
+--- a/mythtv/libs/libmythtv/tv_play.cpp
++++ b/mythtv/libs/libmythtv/tv_play.cpp
+@@ -4741,6 +4741,81 @@ void TV::ProcessNetworkControlCommand(PlayerContext *ctx,
+             DoSeek(ctx, rel_frame, tr("Jump To"));
+         }
+     }
++    else if (tokens.size() >= 3 && tokens[1] == "SUBTITLES")
++    {
++	bool ok = false;
++	int track = tokens[2].toInt(&ok);
++
++	if(!ok)
++	    return;
++
++	if (track == 0) 
++	{
++	    ctx->player->SetCaptionsEnabled(false,true);
++	}
++	else 
++	{
++	    uint start  = 1;
++	    QStringList subs = ctx->player->GetTracks(kTrackTypeSubtitle);
++	    uint finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeSubtitle,track-start);
++		ctx->player->EnableCaptions(kDisplayAVSubtitle);
++		return;
++	    }
++
++	    start = finish + 1;
++	    subs = ctx->player->GetTracks(kTrackTypeCC708);
++	    finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeCC708,track-start);
++		ctx->player->EnableCaptions(kDisplayCC708);		
++		return;
++	    }
++
++	    start = finish + 1;
++	    subs = ctx->player->GetTracks(kTrackTypeCC608);
++	    finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeCC608,track-start);
++		ctx->player->EnableCaptions(kDisplayCC608);
++		return;
++	    }
++
++	    start = finish + 1;
++	    subs = ctx->player->GetTracks(kTrackTypeTeletextCaptions);
++	    finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeTeletextCaptions,track-start);
++		ctx->player->EnableCaptions(kDisplayTeletextCaptions);
++		return;
++	    }
++
++	    start = finish + 1;
++	    subs = ctx->player->GetTracks(kTrackTypeTeletextMenu);
++	    finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeTeletextMenu,track-start);
++		ctx->player->EnableCaptions(kDisplayTeletextMenu);
++		return;
++	    }
++
++	    start = finish + 1;
++	    subs = ctx->player->GetTracks(kTrackTypeRawText);
++	    finish = start + subs.size();
++	    if ( track >= start && track < finish )
++	    {
++		ctx->player->SetTrack(kTrackTypeRawText,track-start);
++		ctx->player->EnableCaptions(kDisplayRawTextSubtitle);
++		return;
++	    }
++	}
++    }
+     else if (tokens.size() >= 3 && tokens[1] == "VOLUME")
+     {
+         QRegExp re = QRegExp("(\\d+)%");
+@@ -4864,6 +4939,107 @@ void TV::ProcessNetworkControlCommand(PlayerContext *ctx,
+                     .arg(ctx->last_framerate);
+             }
+ 
++	    infoStr += QString(" Subtitles:");
++
++	    uint subtype = ctx->player->GetCaptionMode();
++
++	    if(subtype == kDisplayNone)
++		infoStr += QString(" *0:[None]*");
++	    else
++		infoStr += QString(" 0:[None]");
++
++	    uint n = 1;
++
++	    QStringList subs = ctx->player->GetTracks(kTrackTypeSubtitle);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayAVSubtitle) 
++		    && ctx->player->GetTrack(kTrackTypeSubtitle) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
++	    subs = ctx->player->GetTracks(kTrackTypeCC708);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayCC708) 
++		    && ctx->player->GetTrack(kTrackTypeCC708) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
++	    subs = ctx->player->GetTracks(kTrackTypeCC608);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayCC608) 
++		    && ctx->player->GetTrack(kTrackTypeCC608) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
++	    subs = ctx->player->GetTracks(kTrackTypeTeletextCaptions);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayTeletextCaptions) 
++		    && ctx->player->GetTrack(kTrackTypeTeletextCaptions) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
++	    subs = ctx->player->GetTracks(kTrackTypeTeletextMenu);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayTeletextMenu) 
++		    && ctx->player->GetTrack(kTrackTypeTeletextMenu) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
++	    subs = ctx->player->GetTracks(kTrackTypeRawText);
++	    for (uint i = 0; i < (uint)subs.size(); i++) 
++	    {
++		if ((subtype & kDisplayRawTextSubtitle) 
++		    && ctx->player->GetTrack(kTrackTypeRawText) == (int)i) 
++		    infoStr += QString(" *%1:[%2]*")
++			.arg(n)
++			.arg(subs[i]);
++		else
++		    infoStr += QString(" %1:[%2]")
++			.arg(n)
++			.arg(subs[i]);
++		n++;
++	    }
++
+             ctx->UnlockPlayingInfo(__FILE__, __LINE__);
+ 
+             QString message = QString("NETWORK_CONTROL ANSWER %1")
+diff --git a/mythtv/programs/mythfrontend/networkcontrol.cpp b/mythtv/programs/mythfrontend/networkcontrol.cpp
+index 0204f34..24ba56e 100644
+--- a/mythtv/programs/mythfrontend/networkcontrol.cpp
++++ b/mythtv/programs/mythfrontend/networkcontrol.cpp
+@@ -748,6 +748,17 @@ QString NetworkControl::processPlay(NetworkCommand *nc, int clientID)
+         message = QString("NETWORK_CONTROL VOLUME %1")
+                           .arg(nc->getArg(2).toLower());
+     }
++    else if (is_abbrev("subtitles", nc->getArg(1), 2))
++    {
++	if (nc->getArgCount() < 3)
++	    message = QString("NETWORK_CONTROL SUBTITLES 0");
++	else if (!nc->getArg(2).toLower().contains(QRegExp("^\\d+$")))
++	    return QString("ERROR: See 'help %1' for usage information")
++		.arg(nc->getArg(0));
++	else
++	    message = QString("NETWORK_CONTROL SUBTITLES %1")
++		.arg(nc->getArg(2));
++    }
+     else
+         return QString("ERROR: See 'help %1' for usage information")
+                        .arg(nc->getArg(0));
+@@ -1038,7 +1049,12 @@ QString NetworkControl::processHelp(NetworkCommand *nc)
+             "play speed 1/4x       - Playback at 1/4x speed\r\n"
+             "play speed 1/3x       - Playback at 1/3x speed\r\n"
+             "play speed 1/2x       - Playback at 1/2x speed\r\n"
+-            "play stop             - Stop playback\r\n";
++            "play speed 2x         - Playback at 2x speed\r\n"
++            "play speed 4x         - Playback at 4x speed\r\n"
++            "play speed 8x         - Playback at 8x speed\r\n"
++            "play speed 16x        - Playback at 16x speed\r\n"
++            "play stop             - Stop playback\r\n"
++	    "play subtitles [#]    - Switch on indicated subtitle tracks\r\n";
+     }
+     else if (is_abbrev("query", command))
+     {

@@ -1,0 +1,63 @@
+The Universal Control (UC) API is a RESTful Web API designed to allow the
+core functionality of any network-connected set-top box, personal video
+recorder, Internet radio or similar device to be controlled from client
+software running on another device on the home network.
+
+The idea is that a TV/set-top-box runs a UC server that implements the API.
+And client devices communicate with the TV/set-top-box via that API. Because
+it is a web based API, clients could be anything from a mobile phone app, to
+javascript within a web page.
+
+The code here are prototype implementations of Universal Control API clients
+and servers:
+
+ * A MythTV based prototype server
+ * Prototype client(s)
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+
+
+Getting started
+---------------
+
+The prototype server adds a UC API server implementation to MythTV. It
+requires a slightly customised (patched) build of MythTV at present. See
+the INSTALL file for detailed instructions on how to get it up and running.
+
+The client is a simple web based client that requires no installation
+process. See the README file in its directory.
+
+There are also some utilities - such as a tool for creating and decoding
+'pairing codes'.
+
+
+
+Overview of files:
+------------------
+
+/scripts   ... scripts for packaging up UC server and components into
+               tarballs for easy installation.
+
+/clients   ... example clients
+
+/servers   ... code for UC servers
+
+/servers/lib/python   ... various libraries needed by the UC server,
+                          including core UC server code that can be reused
+                          across different server implementations
+
+/servers/mythtv   ... code specific to UC server for MythTV
+
+/servers/mythtv/scripts/ucserver_mythtv.py  ... the main executable
+
+/servers/platform_extras/mythtv   ... scripts for building a patched mythtv
+
+/utilities  ... useful utilities - eg. one for creating and decoding
+                'pairing codes'
+
+
+
+Licensing terms and authorship
+------------------------------
+See 'COPYING' and 'AUTHORS' files.

@@ -1,0 +1,9 @@
+<mythmenu name="UNIVERSALCONTROL">
+
+  <button>
+     <type>UC</type>
+     <text>UC</text>
+     <action>UC_ACTION</action>
+  </button>
+
+</mythmenu>

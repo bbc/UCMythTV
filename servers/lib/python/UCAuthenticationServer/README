@@ -1,0 +1,7 @@
+This module provides a simple extension to python's BaseHTTPServer module to
+include the authentication scheme from the UC v0.6.0 spec. It is fully documented in pydoc.
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+The module installed is:
+ -- UCAuthenticationServer (the actual server module)

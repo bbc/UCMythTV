@@ -1,0 +1,502 @@
+#!/bin/sh
+#
+# Configure script for mythplugins
+#
+
+###
+# functions from ffmpeg'sconfigure
+
+log(){
+    echo "$@" >> $logfile
+}
+
+log_file(){
+    log BEGIN $1
+    pr -n -t $1 >> $logfile
+    log END $1
+}
+
+echolog(){
+    log "$@"
+    echo "$@"
+}
+
+set_all(){
+    value=$1
+    shift
+    for var in $*; do
+        eval $var=$value
+    done
+}
+
+enable(){
+    set_all yes $*
+}
+
+disable(){
+    set_all no $*
+}
+
+enabled(){
+    test "${1#!}" = "$1" && op== || op=!=
+    eval test "x\$${1#!}" $op "xyes"
+}
+
+disabled(){
+    test "${1#!}" = "$1" && op== || op=!=
+    eval test "x\$${1#!}" $op "xno"
+}
+
+enabled_all(){
+    for opt; do
+        enabled $opt || return 1
+    done
+}
+
+disabled_all(){
+    for opt; do
+        disabled $opt || return 1
+    done
+}
+
+enabled_any(){
+    for opt; do
+        enabled $opt && return 0
+    done
+}
+
+disabled_any(){
+    for opt; do
+        disabled $opt && return 0
+    done
+    return 1
+}
+
+is_in(){
+    value=$1
+    shift
+    for var in $*; do
+        [ $var = $value ] && return 0
+    done
+    return 1
+}
+
+check_cmd(){
+    log "$@"
+    "$@" >> $logfile 2>&1
+}
+
+die_unknown(){
+    echo "Unknown option \"$1\"."
+    echo "See $0 --help for available options."
+    exit 1
+}
+
+#
+#    default parameters for all plugins
+#
+
+PLUGIN_LIST="
+archive
+browser
+flix
+gallery
+game
+music
+netvision
+news
+video
+weather
+zoneminder
+universalcontrol
+"
+
+CONFIG_LIST="
+opengl
+libvisual
+fftw
+sdl
+exif
+newexif
+dcraw
+"
+
+enable $PLUGIN_LIST $CONFIG_LIST
+
+
+prefix="/usr/local"
+libdir_name="lib"
+sysroot=""
+mythroot=""
+
+logfile="config.ep"
+
+cc="gcc"
+qmake="qmake"
+python="python"
+
+targetos=`uname -s`
+
+if test x"$1" = x"-h" -o x"$1" = x"--help" ; then
+cat << EOF
+
+Usage:   configure [options]
+Options: [defaults in brackets after descriptions]
+NB:      all --enable-* options can be reversed with --disable-*
+
+Generic options:
+  --prefix=PREFIX          MythTV install location PREFIX [$prefix]
+  --sysroot=SYSROOT        General sysroot location SYSROOT [$sysroot]
+  --mythroot=SYSROOT       MythTV specific sysroot location [$mythroot]
+  --qmake=QMAKE            use specified qmake [$qmake]
+  --python=PATH            Force a specific python executable to use [$python]
+  --libdir-name=LIBNAME    install/look for libs in PREFIX/LIBNAME [$libdir_name]
+  --help                   print this message
+  --enable-all             Enable all options
+  --enable-opengl          enable OpenGL (Music and Gallery) [$opengl]
+  --previous               use previous configure parameters if possible
+
+MythUniversalControl related options:
+  --enable-mythuniversalcontrol     build the mythuniversalcontrol plugin [$universalcontrol]
+
+EOF
+exit 1
+fi
+if [ -e config.log ] ; then
+    PCONF=`cat config.log | tail -n 1 | grep configure`
+    if test x"$PCONF" != x"" ; then
+        PCONF=`echo $PCONF | sed 's/.\/configure//g'`
+    fi
+    for opt do
+        if test x"$opt" != x"--prev" -a x"$opt" != x"--previous" ; then
+            OTHOPT="$OTHOPT$opt"
+        fi
+        if test x"$opt" = x"--prev" -o x"$opt" = x"--previous" ; then
+            if test x"$PCONF" != "--prev" ; then
+                PREV="yes";
+            fi
+        fi
+    done
+    if test x"$PREV" = x"yes"; then
+        echo "Options: $PCONF $OTHOPT"
+        ./configure $PCONF $OTHOPT
+        exit
+    fi
+fi
+
+
+CMDLINE_SET="
+    logfile
+    qmake
+    python
+    sysroot
+    mythroot
+"
+
+CONFIGURATION_OPTS=""
+for opt do
+  CONFIGURATION_OPTS="$CONFIGURATION_OPTS ""$opt"
+done
+
+date >> config.log
+echo "   $0$CONFIGURATION_OPTS" >> config.log
+
+for opt do
+  optval="${opt#*=}"
+  case "$opt" in
+  --prefix=*) prefix=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --libdir-name=*) libdir_name=`echo $opt | cut -d '=' -f 2`;
+  ;;
+  --enable-myth?*|--disable-myth?*)
+  eval $(echo "$opt" | sed 's/--/action=/;s/-myth/ option=/;s/-/_/g')
+  if is_in $option $PLUGIN_LIST; then
+      $action $option
+  else
+      die_unknown $opt
+  fi
+  ;;
+  --enable-new-exif)  enable exif newexif
+  ;;
+  --disable-new-exif) disable newexif
+  ;;
+  --enable-dcraw) dcraw="yes"
+  ;;
+  --disable-dcraw) dcraw="no"
+  ;;
+  --icc-profile=*) icc=`echo $opt | cut -d '=' -f 2`
+  ;;
+  --enable-all)
+      enable $PLUGIN_LIST $CONFIG_LIST
+  ;;
+  --disable-all)
+      disable $PLUGIN_LIST $CONFIG_LIST
+  ;;
+  --enable-?*|--disable-?*)
+  eval $(echo "$opt" | sed 's/--/action=/;s/-/ option=/;s/-/_/g')
+  if is_in $option $CONFIG_LIST; then
+      $action $option
+  else
+      die_unknown $opt
+  fi
+  ;;
+  *)
+  optname="${opt%%=*}"
+  optname="${optname#--}"
+  optname=$(echo "$optname" | sed 's/-/_/g')
+  if is_in $optname $CMDLINE_SET; then
+      eval $optname='$optval'
+  fi
+  esac
+done
+
+# set temporary file name
+if test ! -z "$TMPDIR" ; then
+    TMPDIR1="${TMPDIR}"
+elif test ! -z "$TEMPDIR" ; then
+    TMPDIR1="${TEMPDIR}"
+else
+    TMPDIR1="/tmp"
+fi
+
+TMPC="${TMPDIR1}/myth-comp-${RANDOM}-$$-${RANDOM}.c"
+TMPE="${TMPDIR1}/myth-conf-${RANDOM}-$$-${RANDOM}"
+
+
+has_library()
+{
+    if test -f /etc/ld.so.conf ; then
+        LIBPATHS=`cat /etc/ld.so.conf | grep -v "#" | grep -v "include"`
+    else
+        LIBPATHS=''
+    fi
+
+    LIBPATHS="$LIBPATHS `echo $LD_LIBRARY_PATH | sed s/':'/' '/g` "
+    # Mac OS X has a different variable for this:
+    LIBPATHS="$LIBPATHS `echo $DYLD_LIBRARY_PATH | sed s/':'/' '/g` "
+
+    # recurse down just one level, should be enough in most cases
+    if test -f /etc/ld.so.conf ; then
+        INCL=`cat /etc/ld.so.conf | grep -v "#" | grep  "^include"`
+        SRCH=`echo "$INCL" | sed '{ s/^include \//\//; s/^include /\/etc\//}'`
+        for x in $SRCH ; do
+            LP_APPEND=`cat $x | grep -v "#" | grep -v "^include"`
+            LIBPATHS="$LIBPATHS $LP_APPEND"
+        done
+    fi
+
+    LIBPATHS="`echo $LIBPATHS $sysroot$prefix/$libdir_name $sysroot/$libdir_name $sysroot/usr/$libdir_name $sysroot/usr/local/$libdir_name $sysroot/usr/X11R6/$libdir_name | sed s/'\/ '/' '/g` "
+
+    HAS_IT="no"
+    for LIBPATH in $LIBPATHS ; do
+        if test x`ls $LIBPATH/$1* 2> /dev/null | head -n 1` != x"" ; then
+            HAS_IT="yes"
+        fi
+    done
+    expr $HAS_IT : "yes" > /dev/null
+}
+
+has_header()
+{
+    HPATHS="$sysroot$prefix/include $sysroot/usr/local/include $sysroot/usr/include $sysroot/usr/include/g++-v3 $sysroot/usr/X11R6/include $sysroot/"
+    INCL=`echo $DYLD_LIBRARY_PATH $LD_LIBRARY_PATH | sed s/':'/' '/g`
+    HPATHS="$HPATHS `echo $INCL | sed s/$libdir_name/include/g` "
+
+    HAS_IT="no"
+    for HPATH in $HPATHS ; do
+        if test x`ls $HPATH/$1* 2> /dev/null | head -n 1` != x"" ; then
+            HAS_IT="yes"
+        fi
+    done
+    expr $HAS_IT : "yes" > /dev/null
+}
+
+check_py_lib(){
+    log check_py_lib "$@"
+    check_cmd $python <<EOF
+from distutils.sysconfig import get_python_lib
+import sys
+sys.path.append(get_python_lib(prefix='${prefix}'))
+#sys.path.append('debian/libmyth-python/usr/lib/python2.6/dist-packages')
+try:
+    import ${1}
+except:
+    sys.exit(1)
+sys.exit(0)
+EOF
+}
+
+is_qmake4(){
+    $1 --version 2>&1 | egrep -q -e "Qt version 4\.[5-9]\.[0-9]"
+}
+
+if ! is_qmake4 $qmake; then
+    is_qmake4 qmake-qt4 && qmake=qmake-qt4 || die "qmake for Qt4.5 or newer not found.\nPlease specify the correct qmake with --qmake="
+fi
+
+if ! expr $($qmake -query QT_VERSION) : "4\.[5-9]\.[0-9]" >/dev/null; then
+    die "Qt4.5 or newer is required to build MythTV."
+fi
+
+if test "$opengl" != "no" ; then
+    opengl="no"
+    if has_library libGL ; then
+        opengl="yes"
+    fi
+    if test -f $sysroot/System/Library/Frameworks/AGL.framework/Versions/A/AGL ; then
+        opengl="yes"
+    fi
+fi
+
+if ! disabled libvisual; then
+    disable libvisual
+    if has_library libvisual-0.4 ; then
+        if has_header libvisual-0.4/libvisual/libvisual.h ; then
+            enable libvisual
+        fi
+    fi
+fi
+
+if ! disabled fftw; then
+    disable fftw_lib3
+    if has_library libfftw3f_threads ; then
+        if has_library libfftw3_threads ; then
+            if has_header fftw3.h ; then
+                enable fftw_lib3
+            fi
+        fi
+    fi
+fi
+
+if ! disabled fftw; then
+    disable fftw_lib
+    if has_library libfftw ; then
+        if has_library librfftw ; then
+            if has_header fftw.h ; then
+                enable fftw_lib
+            fi
+        fi
+    fi
+fi
+
+if test "$sdl" != "no" ; then
+    sdl="no"
+    if test x`which sdl-config` != x ; then
+        sdl="yes"
+    fi
+fi
+
+if test "$exif" != "no" ; then
+    exif="no"
+    if has_library libexif ; then
+        if has_header libexif/exif-data.h ; then
+            exif="yes"
+        fi
+    fi
+fi
+
+if test "$dcraw" != "no" ; then
+    dcraw="no"
+    if test x`which dcraw` != x ; then
+        dcraw="yes"
+    fi
+fi
+
+if test x"$icc" != x ; then
+    # Assume relative paths are for files in the standard icc directory.
+    case "$icc" in
+    /*)
+    ;;
+    *) icc=/usr/share/color/icc/$icc
+    ;;
+    esac
+    # Verify the presence of the file.
+    if test ! -f "$icc" ; then
+        icc=""
+    fi
+fi
+
+cat > $TMPC << EOF
+#include <stdint.h>
+int main( void ) { return 0; }
+EOF
+
+_stdint_h=no
+if $cc -o $TMPE $TMPC 2> /dev/null ; then
+  _stdint_h=yes
+fi
+
+rm -f $TMPC $TMPE
+
+###########################################################
+#                                                         #
+#  Top level mythplugin.pro file creation                 #
+#  (ie. which plugins to build)                           #
+#                                                         #
+###########################################################
+
+# bring in mythtv config
+if [ -e $mythroot$prefix/include/mythtv/mythconfig.mak ] ; then
+  rm mythconfig.mak 2> /dev/null
+  cp $mythroot$prefix/include/mythtv/mythconfig.mak mythconfig.mak
+  sed -i -e "s,^SYSROOT\=.*,SYSROOT=$mythroot,g" mythconfig.mak
+elif [ -e $sysroot$prefix/include/mythtv/mythconfig.mak ] ; then
+  rm mythconfig.mak 2> /dev/null
+  ln -s $sysroot$prefix/include/mythtv/mythconfig.mak mythconfig.mak
+else
+  echo "ERROR: mythconfig.mak not found at $sysroot$prefix/include/mythtv/mythconfig.mak"
+  echo "Did you make AND install MythTV first?"
+  echo "Are you using the correct prefix ($prefix) and sysroot ($sysroot)?"
+  echo "Bailing out!!"
+  exit
+fi
+
+echo ""
+echo "Configuration settings: "
+echo " "
+echo "        qmake          $(which $qmake)"
+echo " "
+
+echo "#" > ./config.pro
+echo "#    Automatically generated by mythplugin configure" >> ./config.pro
+echo "#    (manual modifications will be overwritten)" >> ./config.pro
+echo "#" >> ./config.pro
+
+if test "$universalcontrol" = "yes" ; then
+  echo "        MythUniversalControl  plugin will be built"
+  echo "SUBDIRS += mythuniversalcontrol" >> ./config.pro
+else
+  echo "        MythUniversalControl  plugin will not be built"
+fi
+
+###########################################################
+#                                                         #
+#   An extra directory and Makefile for cleanup rules     #
+#                                                         #
+###########################################################
+
+mkdir -p cleanup
+cat << END_CLEANUP > cleanup/Makefile
+all:
+clean:
+distclean:
+install:
+qmake_all:
+	\$(NONE)
+
+# Hack to remove some empty directories that qmake doesn't create rules for
+uninstall:
+	-rmdir \$(INSTALL_ROOT)/$prefix/share/mythtv/*
+	-rmdir \$(INSTALL_ROOT)/$prefix/share/mythtv
+
+END_CLEANUP
+
+echo >> ./config.pro
+echo "# clean up for 'make uninstall'. This must be last" >> ./config.pro
+echo "SUBDIRS += cleanup " >> ./config.pro
+
+###########################################################
+
+echo ""
+
+${qmake} QMAKE=$(which ${qmake}) mythplugins.pro

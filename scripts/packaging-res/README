@@ -1,0 +1,3 @@
+Files here are resources that are put into tarballs built by the packaging
+scripts in the parent directory.  Eg.  'setup.sh' files used to install the
+tarball contents.

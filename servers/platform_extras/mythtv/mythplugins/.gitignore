@@ -1,0 +1,9 @@
+Makefile
+cleanup
+config.log
+config.pro
+mythconfig.mak
+mythuniversalcontrol/i18n/i18n
+mythuniversalcontrol/mythuniversalcontrol/moc_*.cpp
+mythuniversalcontrol/theme/themenop
+mythuniversalcontrol/mythuniversalcontrol/libmythuniversalcontrol.so

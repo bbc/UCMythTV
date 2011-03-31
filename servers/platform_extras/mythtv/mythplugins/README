@@ -1,0 +1,10 @@
+This directory contains the scripts necessary to configure and maintain 
+the UniversalControl pairing screen plugin contained in the 
+mythuniversalcontrol subdirectory. These scripts are slightly modified
+versions of the scripts used to build the official mythtv mythplugins
+package. 
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+All code is copyright its respective owners and made available here
+under the terms of the Gnu General Public License v.2.

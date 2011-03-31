@@ -1,0 +1,171 @@
+diff --git a/mythplugins/mythbrowser/mythbrowser/browserlauncher.cpp b/mythplugins/mythbrowser/mythbrowser/browserlauncher.cpp
+new file mode 100644
+index 0000000..f40c4be
+--- /dev/null
++++ b/mythplugins/mythbrowser/mythbrowser/browserlauncher.cpp
+@@ -0,0 +1,74 @@
++#include "browserlauncher.h"
++
++#include <QObject>
++#include <QRegExp>
++
++#include <mythcontext.h>
++#include <mythdbcon.h>
++#include <mythdialogs.h>
++#include <util.h>
++#include <mythdb.h>
++#include <mythuihelper.h>
++
++#define LOC_ERR QString("MythBrowser:BROWSERLAUNCHER Error: ")
++#define LOC QString("MythBrowser:BROWSERLAUNCHER: ")
++
++MythbrowserLauncher::MythbrowserLauncher()
++{
++    gCoreContext->addListener(this);
++}
++
++void MythbrowserLauncher::customEvent(QEvent *e) 
++{
++    if( e->type() != MythEvent::MythEventMessage)
++	return;
++    
++    MythEvent *me = dynamic_cast<MythEvent *>(e);
++    QString message = me->Message();
++    QStringList tokens = message.split(" ", QString::SkipEmptyParts);
++
++    if (message.left(15) == "NETWORK_CONTROL")
++    {
++	QRegExp qr = QRegExp("NETWORK_CONTROL URL LOAD (\\S+)");
++	if(message.contains(qr))
++	{	    
++	    this->LoadURL(qr.capturedTexts()[1]);
++	    return;
++	}
++    }
++}
++
++void MythbrowserLauncher::LoadURL(QString url) 
++{
++  VERBOSE(VB_GENERAL|VB_EXTRA, QString("Launching URL: %1").arg(url));
++
++  if (url.isEmpty()) 
++      return;
++
++  QString browser = gCoreContext->GetSetting("WebBrowserCommand", "");
++  QString zoom    = gCoreContext->GetSetting("WebBrowserZoomLevel", "1.0");
++
++  if (browser.isEmpty())
++      return;
++  
++  if (browser.toLower() == "internal")
++  {
++      GetMythMainWindow()->HandleMedia("WebBrowser", url);     
++      return;
++  }
++  else
++  {
++      QString cmd = browser;
++      cmd.replace("%ZOOM%", zoom);
++      cmd.replace("%URL%", url);
++      cmd.replace('\'', "%27");
++      cmd.replace("&","\\&");
++      cmd.replace(";","\\;");
++      
++      GetMythMainWindow()->AllowInput(false);
++      myth_system(cmd, kMSDontDisableDrawing);
++      GetMythMainWindow()->AllowInput(true);
++      
++      return;
++  }
++}
+diff --git a/mythplugins/mythbrowser/mythbrowser/browserlauncher.h b/mythplugins/mythbrowser/mythbrowser/browserlauncher.h
+new file mode 100644
+index 0000000..065a9b7
+--- /dev/null
++++ b/mythplugins/mythbrowser/mythbrowser/browserlauncher.h
+@@ -0,0 +1,19 @@
++// -*- Mode: c++ -*-
++#ifndef BROSWERLAUNCHER_H_
++#define BROWSERLAUNCHER_H_
++
++#include <QObject>
++
++class MythbrowserLauncher : public QObject
++{
++    Q_OBJECT
++
++  public:
++    MythbrowserLauncher();
++
++    void LoadURL(QString url);
++
++    void customEvent(QEvent *event);
++};
++    
++#endif /* BROWSERLAUNCHER_H_ */
+diff --git a/mythplugins/mythbrowser/mythbrowser/main.cpp b/mythplugins/mythbrowser/mythbrowser/main.cpp
+index 277f5bf..a396a5c 100644
+--- a/mythplugins/mythbrowser/mythbrowser/main.cpp
++++ b/mythplugins/mythbrowser/mythbrowser/main.cpp
+@@ -15,6 +15,9 @@
+ #include "bookmarkmanager.h"
+ #include "browserdbutil.h"
+ #include "mythbrowser.h"
++#include "browserlauncher.h"
++
++MythbrowserLauncher *launcher;
+ 
+ using namespace std;
+ 
+@@ -71,6 +74,8 @@ int mythplugin_init(const char *libversion)
+ 
+     setupKeys();
+ 
++    launcher = new MythbrowserLauncher();
++
+     return 0;
+ }
+ 
+@@ -109,3 +114,8 @@ int mythplugin_config(void)
+         return -1;
+     }
+ }
++
++void mythplugin_destroy(void)
++{
++  delete launcher;
++}
+diff --git a/mythplugins/mythbrowser/mythbrowser/mythbrowser.pro b/mythplugins/mythbrowser/mythbrowser/mythbrowser.pro
+index 98a8a9d..e2740a1 100644
+--- a/mythplugins/mythbrowser/mythbrowser/mythbrowser.pro
++++ b/mythplugins/mythbrowser/mythbrowser/mythbrowser.pro
+@@ -18,7 +18,9 @@ INSTALLS += installimages
+ # Input
+ HEADERS += mythbrowser.h webpage.h 
+ HEADERS += bookmarkmanager.h bookmarkeditor.h browserdbutil.h
++HEADERS += browserlauncher.h
+ SOURCES += main.cpp mythbrowser.cpp webpage.cpp
+ SOURCES += bookmarkmanager.cpp bookmarkeditor.cpp browserdbutil.cpp
++SOURCES += browserlauncher.cpp
+ 
+ include ( ../../libs-targetfix.pro )
+diff --git a/mythtv/programs/mythfrontend/networkcontrol.cpp b/mythtv/programs/mythfrontend/networkcontrol.cpp
+index d2d422c..832d8d5 100644
+--- a/mythtv/programs/mythfrontend/networkcontrol.cpp
++++ b/mythtv/programs/mythfrontend/networkcontrol.cpp
+@@ -659,6 +659,15 @@ QString NetworkControl::processPlay(NetworkCommand *nc, int clientID)
+ 	message = QString("NETWORK_CONTROL GAME LAUNCH %1 %2").arg(nc->getArg(2)).arg(nc->getFrom(3));
+ 	result = QString("OK");
+     }
++    else if ((nc->getArgCount() >= 3) &&
++	     (is_abbrev("url",nc->getArg(1))))
++    {
++      	QString url = nc->getArg(2);
++	VERBOSE(VB_GENERAL|VB_EXTRA, QString("Web URL = %1").arg(url));
++
++	message = QString("NETWORK_CONTROL URL LOAD %1").arg(url);
++	result  = QString("OK");       
++    }
+     // Everything below here requires us to be in playback mode so check to
+     // see if we are
+     else if (GetMythUI()->GetCurrentLocation().toLower() != "playback")

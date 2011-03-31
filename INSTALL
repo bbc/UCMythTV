@@ -1,0 +1,181 @@
+The instructions here cover:
+
+ * how to build the required customised MythTV instance
+ * how to build a distribution tarball including both it and UC Server
+ * how to create a USB stick from which MythBuntu can be installed
+   that includes the MythTV + UC server tarball
+ * how to set up a machine from scratch using that USB stick
+ * how to later install just UC server (eg. if a new version)
+
+At present (Feb 2011) UC Server requires a slightly patched version of
+MythTV. Installation therefore requires the building of a customised
+build of MythTV.
+
+The authors have successfully done this using:
+
+ MythBuntu 10.04 (32 bit edition)
+
+This was used becuase, being a MythTV oriented distribution, it already
+comes with many of the required packages for MythTV and automates much of
+the process needed to get MythTV up and running.
+
+The steps below assume your MythTV system has a DVB-T TV Tuner connected
+eg. a USB based TV tuner device. If you live in a country without DVB-T
+then this process should still work for other kinds of digital TV. The
+steps you need to take during the part of the myth tv setup process
+where you configure and tune the TV receiver, may need to be varied as
+appropriate.
+
+
+
+Obtaining MythTV source, patching it and compiling it
+-----------------------------------------------------
+
+The following steps should be followed in order to build the modified
+MythTV that is needed, at present, by the Universal Control server code.
+This process downloads the MythTV source, patches it, compiles it, then
+builds an installation tarball.
+
+   1. Download a MythBuntu installer image from Mythbuntu and write it to a
+      USB stick as a bootable disk.
+
+   2. Execute the following commands (you will need 'git' and 'patch'
+      installed for this to work):
+
+          cd servers/platform_extras/mythtv
+          ./scripts/acquire-mythtv-source.sh
+
+      The source-code for MythTV itself can now be found in this directory:
+
+          servers/platform_extras/mythtv/mythtv-source
+
+      and can be modified and worked with as desired. This directory is a
+      git repository holding the code of the system.
+
+   3. You will also need to install some missing dependencies if you don't
+      already have them. This can be done as follows on a debian based
+      distro such as MythBuntu:
+
+          sudo apt-get install build-essential libasound2-dev libqt4-dev \
+                               pkg-config yasm libdirectfb-dev g++ \
+                               qt4-qmake libmp3lame-dev libxxf86vm-dev \
+                               libxinerama-dev python-pycurl
+
+   4. To create an updated binary tarball with your modified version of
+      MythTV run:
+
+          cd servers/platform_extras/mythtv
+          ./recreate-tarball.sh
+
+You can now move onto the installation steps described below.
+
+
+
+
+Creating an installation USB stick
+----------------------------------
+
+These steps assume you have followed the previous instructions and have,
+preared, a tarball of the patched and compiled MythTV ready for install.
+
+These steps show you how to create a USB stick with MythBuntu on it,
+ready to install MythBuntu onto a new PC; but also including the
+UC server code, and our patched version of MythTV, ready to be easily
+installed once MythBuntu installation is complete.
+
+On your development machine (not the target machine), to make an
+installation USB stick:
+
+   1. Download a Mythbuntu installer image from Mythbuntu and write it to a
+      USB stick as a bootable disk. Choose the 10.04 32 bit edition.
+
+   2. Change directory to the repository trunk root then execute the
+      following commands:
+
+          cd scripts
+          ./package-dist-mythtv.sh create
+
+      This packages up both the mythtv tarball and all the components
+      that make up the UC Server into a single tarball with an installation
+      script.
+
+   3. Copy the resulting tarball UC-confluence-mythtv-install-[date].tar.gz
+      from the ../dist directory also onto the USB stick
+
+
+
+Setting up a new PC with the USB stick you just created
+-------------------------------------------------------
+
+For each target machine you want to install on:
+
+   1. Boot your new computer using the USB stick and start the MythBuntu
+      installation process.
+
+   2. When the installer asks you if you want to run the mythtv
+      configuration tools say yes, and then do the following:
+
+         1. Add a capture card - 'DVB DTV capture card' for DVB receivers
+
+         2. Add a Video Source, setting the 'listings grabber' to
+           'Transmitted guide only (EIT)'
+
+         3. Configure an "Input Mapping" between the DVB receiver you
+            configured and the Video Source you created, and then tell
+            it to scan for all channels (TV and radio)
+
+         4. Accept all of the channels it finds
+
+         5. optionally edit your channel table to remove channels you don't
+            want to use.
+
+   3. Finish the MythBuntu instalation and allow the machine to reboot
+      into MythBuntu
+
+   4. Quit the MythTV frontend by pressing Esc at the main menu.
+
+   5. Open up a terminal, mount the usb stick, copy the tarball you created
+      before across, and uncompress it.
+
+   6. Change into the uncompressed directory and execute the command:
+
+          bash setup.sh
+
+   7. Enter the password of your user account when prompted. The target
+      machine must be on a direct internet connection (no proxies) at
+      the time.
+
+   8. After a few minutes, the mythtv frontend will start.
+      Confirm that you wish to perform upgrade, and reconfirm when a warning
+      is displayed.
+
+   9. Exit the mythtv frontend. The machine will then reboot and
+      installation should be complete.
+
+Finally: the distribution also includes a script for enabling audio via HDMI
+which was developed use on Asus 'EeeBox' PCs. To use it, run:
+
+        scripts/enable_hdmi_audio.sh
+
+
+
+
+Installing/updating just the UC Server
+--------------------------------------
+
+Perhaps you just want to update the UC Server, without re-installing the
+modified MythTV too:
+
+    1. Go into the scripts directory and run these two scripts:
+
+            package-server-mythtv.sh
+            package-server-lib-py-ucserver.sh
+
+       If successful, each will echo the path to a resulting tarball,
+       containing the packaged code.
+
+    2. Take the two tarballs, copy them onto the target machine, uncompress
+       them, and for both, run:
+
+            sudo python setup.py install
+	    

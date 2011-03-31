@@ -1,0 +1,12 @@
+This directory contains the code and patches for building the modified
+version of MythTV required at present (Feb 2011) for the Universal Control
+Server.
+
+See INSTALL file in the great-grandparent directory for details of how to do
+this process.
+
+Assuming you already have, if you just want to regenerate the binary
+tarball, run:
+
+   ./recreate-tarball.sh
+

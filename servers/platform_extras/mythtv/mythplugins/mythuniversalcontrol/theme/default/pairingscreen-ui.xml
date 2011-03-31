@@ -1,0 +1,34 @@
+<mythuitheme>
+    <window name="pairingscreenui">
+
+        <textarea name="title" from="basetextarea">
+            <area>38,36,1000,50</area>
+	    <font>baseextralarge</font>
+	    <value>Universal Control Pairing Screen</value>
+	</textarea>
+
+        <textarea name="version" from="basetextarea">
+            <area>38,86,1000,50</area>
+	    <font>baseextralarge</font>
+	    <value></value>
+	    <template>Server version: %1</template>
+	</textarea>
+
+	<fontdef name="PairingCodeHuge" from="baseextralarge">
+	    <pixelsize>100</pixelsize>
+	</fontdef>
+
+	<textarea name="ucpairingcode" from="basetextarea">
+	    <area>100,150,2000,100</area>
+	    <font>PairingCodeHuge</font>
+	    <value>&lt;None&gt;</value>
+	    <template>%1</template>
+	</textarea>
+
+	<buttonlist name="AuthenticatedClients" from="basebuttonlist" >
+  	    <area>10%,300,50%,50%</area>
+	    <showarrow>no</showarrow>
+	</buttonlist>
+	
+    </window>
+</mythuitheme>

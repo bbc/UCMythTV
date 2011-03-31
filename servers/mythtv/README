@@ -1,0 +1,5 @@
+This directory contains a Universal Control server intended for use on a MythTV system running both a primary backend and primary frontend on the same machine. It makes use of the MythTV python bindings.
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+This software is released under the terms of the Gnu General Public License version 2 and its copyright is held by the BBC.

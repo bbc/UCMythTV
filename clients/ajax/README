@@ -1,0 +1,82 @@
+What is this?
+-------------
+
+This is a a very simple ajax client for a universal control (UC) server.  It
+is designed to be served from a web server, and used in a browser.
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+To make use of this client you need a universal control server, a
+web-server, and a modern web browser with CORS[1] support on a client
+machine. Suitable browsers include Firefox and Chrome, but does NOT (as of
+Feb 2011) include Internet Explorer.
+
+The client machine must be capable of sending HTTP requests to both the
+web-server AND the Universal Control server.  It is NOT required for the web
+server machine to be able to make requests to the Universal Control server
+because all the communication is done directly in javascript.
+
+The web-server and browser can be on the same machine if you want. You could
+also run the universal control server on the same machine, however this is
+not required.
+
+
+
+Getting it running
+------------------
+In summary, using the supplied basic web server:
+
+  1. Run server.py
+  2. Point browser at http://localhost:8000
+
+You can also use your own web server if you wish. Simply place the contents
+of this directory into it, and configure it to serve it up. Then point your
+web browser at it.
+
+
+
+Using the interface
+-------------------
+
+The first thing the web page should display is a box asking for a pairing
+code. Enter the pairing code of your Universal Control server and the client
+should connect.
+
+    For the MythTV based UC server, there is a 'pairing code' screen in the
+    setup menu which will display the pairing code you need.
+
+The client shows what source the box is currently tuned to, its current
+volume, and if such information is available then also the title, time, and
+description of the currently presenting programme.  The source can be
+changed by selecting a source from the "Change Source" list-box, and hitting
+enter (or clicking the "GO" button).  The volume can be changed by selecting
+the desired volume from the "Change Volume" list-box, and hitting enter (or
+clicking the "Set" button).  The client will automatically update its
+representation fo what the box is showing when it changes.
+
+If the user selects to change to a source which requires the selection of an
+individual programme then the client will bring up a dialogue-box with a
+list of programmes to choose from.  The list will only contain the first ten
+items, but more can be displayed using the "Next" and "Previous" buttons.
+
+
+
+
+The files here
+--------------
+
+  -- index.html   : The html page which contains the displayed elements of the client.
+  
+  -- UCClient.js  : A javascript file containing the bulk of the client code.
+
+  -- server.py    : A simple python script which acts as a web server.
+
+  -- js/ and css/ : directories containing the javascript and css components of
+                    the jQuery and jQuery-ui javascript libraries employed by 
+                    the client. 
+
+
+
+[1] Cross Origin Resource Sharing
+    http://www.w3.org/TR/cors/
+

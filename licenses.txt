@@ -1,0 +1,97 @@
+Licensing Information:
+
+servers/lib/python/HTTPAuthenticationServer
+-- Apache 2 + GPL 2
+
+servers/lib/python/BasicCORSServer
+-- Apache 2 + GPL 2
+
+servers/lib/python/Zeroconf  
+-- LGPL 2.1 or higher
+
+servers/lib/python/UCServer
+-- Apache 2 + GPL 2
+
+servers/lib/python/xtest-1.0
+-- GPL v 2.0
+
+servers/mythtv
+-- GPL 2
+
+  Uses:
+    Standard Python libraries:
+    md5py.py from http://starship.python.net/~gherman/md5py.html
+    -- Python Software Foundation License 
+
+    dbus-python
+    -- Permissive non-copyleft license (allows any use at all as long as the copyright notice and permissive license are included in the copied library, no restriction on code which merely uses the library) (appears to be identical to MIT license)
+
+    python-glib
+    -- LGPL
+
+    MythTV Python Bindings
+    -- GPL 2
+
+servers/platform_extras/mythtv/mythtv.tar.gz
+-- GPL 2
+
+servers/platform_extras/mythtv/mythplugins
+-- GPL 2
+
+clients/ajax
+-- Apache 2
+
+  Includes:
+    clients/ajax/js/ (jquery and jquery-ui)
+    -- Dual MIT and GPL licenses
+
+  Uses:
+    Standard Python libraries:
+    -- Python Software Foundation License
+	
+clients/android/commentator
+-- Copyright BBC, No license currently, needs one before distribution.
+
+  Uses:
+	JLayer MP3 Library - LGPL 2.1
+	mp4parser (http://code.google.com/p/mp4parser/) - Apache License 2.0
+	Both used experimentally only, can be removed mp4 in particular is non-functional
+
+clients/android/uctiltspeak
+-- Copyright BBC, No license currently, needs one before distribution.
+
+  Uses:
+	PocketSphinx - BSD license
+	JmDNS - Apache 2.0
+	JmDNS used experimentally only, can be removed or developed for auto-discovery.
+	
+clients/macos-tts
+-- Copyright BBC, No license currently, needs one before distribution.
+
+	Uses:
+	ASIHTTP - Public domain
+	
+clients/android/userspeechtest
+-- Copyright BBC, No license currently, speech test app only should probably not be distributed.
+
+  Uses:
+	PocketSphinx - BSD license
+
+utilities/ntptime.py
+-- Python Software Foundation License
+
+utilities/PairingCode.py
+-- Apache 2
+
+doc/spec
+-- Copyright BBC, No license currently, needs one before distribution.
+
+doc/tutorial
+-- Copyright BBC, No license currently, needs one before distribution.
+
+doc/usecases
+-- Copyright BBC, No license currently, needs one before distribution
+
+
+
+  

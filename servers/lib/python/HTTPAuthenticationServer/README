@@ -1,0 +1,11 @@
+This module provides a simple extension to python's BaseHTTPServer module to
+include HTTP 1.1 digest authentication. It is fully documented in pydoc.
+
+This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+
+The modules installed are:
+ -- HTTPAuthenticationServer (the actual server module)
+
+and, if hashlib is not present on your system then also:
+
+ -- md5py (a pure python implementation of the md5 algorithm)

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+Copyright 2011 British Broadcasting Corporation
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Universal Control Example AJAX Client</title>
+		<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.5.custom.css" rel="stylesheet" />	
+		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
+		<script type="text/javascript" src="UCClient.js"></script>
+		<style>	
+		  h1 { text-align: center; }
+		  .ui-widget-header { text-align: center; }		  
+		</style>
+	</head>
+
+	<body class="ui-widget-content" aria-labelledby="MAIN_HEADER">
+	  <h1 id="MAIN_HEADER">UC Client</h1>
+
+	  <div id="status-region"
+	       role="region"
+	       aria-live="polite"
+	       style="text-align: center;"></div>
+	  
+	  <div id="enter-pairing-code-dialogue"
+	       class="ui-widget-content ui-helper-hidden">
+	    <label for="pairing-code" id="PAIRING_CODE_LABEL">Please Enter Pairing Code:</label>
+	    <input type="text" 
+		   id="pairing-code"
+		   class="text ui-widget-content ui-corner-all" 
+		   aria-labelledby="PAIRING_CODE_LABEL"
+		   tabindex="0"
+		   onKeyPress="return submitenter(event,connect_to_server)"/>
+	  </div>	  
+
+	  <div id="connecting-status-dialogue"
+	       class="ui-widget-content ui-helper-hidden">
+	  </div>
+
+	  <div id="select-programme-dialogue"
+	       class="ui-widget-content ui-helper-hidden">
+	    <ul id="programme-button-list">
+	    </ul>
+	    <hr/>
+	    <div id="programme-dialogue-control-buttons">
+	      <button id="prev-programme-screen"
+		      tabindex="0">Previous</button>
+	      <button id="next-programme-screen" 
+		      tabindex="0">Next</button>
+	    </div>
+	  </div>	  
+
+	  <div id="server-status" 
+	       class="ui-widget-content ui-helper-hidden"
+	       aria-labelledby="STATUS_HEADER">
+	    <h2 class="ui-widget-header" id="STATUS_HEADER">Set Top Box Status</h2>
+	    
+	    
+	    <div role="region" aria-live="polite">
+	      <div id="sourcesection" class="ui-helper-hidden">
+
+		<div class="ui-widget-content">		  
+		  <h3 class="ui-widget-header" id="SOURCE_HEADER">
+		    <span id="SOURCE_HEADER_text">Currently Tuned to</span>
+		    <span id="current_source">UNKNOWN SOURCE</span>
+		  </h3>
+		  <span id="SOURCE_status">
+		  </span>
+		  <p>
+		    Change Source:
+		    <select id="sources" tabindex="0" 
+			    role="listbox" >
+		    </select> 
+		    <button id="change_source_button" tabindex="0"
+			    role="button">
+		      Go
+		    </button>
+		  </p>
+		  <div id="VOLUME_DIV" class="ui-helper-hidden">
+		    <p>
+		      <span id="VOLUME_LABEL">Volume Now:</span>
+		      <span id="VOLUME_CURRENTLY">UNKNOWN</span>
+		    </p>
+		    <p>
+		      Change Volume: 
+		      <select id="VOLUME_INPUT"
+			      tabindex="0">
+			<option value="0"> 00%</option>
+			<option value="1"> 10%</option>
+			<option value="2"> 20%</option>
+			<option value="3"> 30%</option>
+			<option value="4"> 40%</option>
+			<option value="5"> 50%</option>
+			<option value="6"> 60%</option>
+			<option value="7"> 70%</option>
+			<option value="8"> 80%</option>
+			<option value="9"> 90%</option>
+			<option value="10">100%</option>
+		      </select>
+		      <button id="change_volume_button"
+			      tabindex="0">
+			Set
+		      </button>
+		    </p>
+		  </div>
+		</div>
+	      </div>
+	      
+	      <div id="nowsection" class="ui-helper-hidden">
+		<div class="ui-widget-content">
+		  <h3 class="ui-widget-header" 
+		      id="NOW_HEADER"
+		      tabindex="0">
+		    <span id="NOW_SHOWING_text">Now Showing:</span>
+		    <span id="now-programme">
+		      UNKNOWN PROGRAMME
+		    </span>
+		  </h3>
+		  <p id="NOW_TIME_HEADER"
+		     class="ui-helper-hidden"
+		     tabindex="0">
+		    <span id="NOW_TIME_HEADER_text">Time:</span>
+		    <span id="now-time">
+		      UNKNOWN
+		    </span>
+		  </p>
+	      
+		  <h4 id="NOW_DESCRIPTION_HEADER">Description</h4>
+		  <p tabindex="0"
+		     id="now-description" aria-labelledby="NOW_DESCRIPTION_HEADER" 
+		     aria-describedby="now-description">
+		    NO DESCRIPTION
+		  </p>
+		</div>
+	      </div>
+	    </div>	      
+	  </div>
+	</body>	  
+</html>
+
+
