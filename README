@@ -3,6 +3,10 @@ core functionality of any network-connected set-top box, personal video
 recorder, Internet radio or similar device to be controlled from client
 software running on another device on the home network.
 
+The protocol is specified in BBC R&D White Paper 194:
+
+< http://www.bbc.co.uk/rd/publications/whitepaper194.shtml >
+
 The idea is that a TV/set-top-box runs a UC server that implements the API.
 And client devices communicate with the TV/set-top-box via that API. Because
 it is a web based API, clients could be anything from a mobile phone app, to
