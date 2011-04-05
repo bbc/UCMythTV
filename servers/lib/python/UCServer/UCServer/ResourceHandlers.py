@@ -1796,7 +1796,7 @@ class UCSearchResourceHandler(UCResourceHandler):
         handler.send_response(200)
         handler.send_header('Content-Length',len(string))
         handler.send_header('Cache-Control','no-cache')
-        handler.send_header('Cache-Type','application/xml')
+        handler.send_header('Content-Type','application/xml')
         handler.end_headers()
 
         if not head:
