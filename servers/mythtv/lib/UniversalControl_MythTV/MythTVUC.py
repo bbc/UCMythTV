@@ -23,6 +23,7 @@ import threading
 import re
 import math
 import datetime
+import time
 import traceback
 import os
 
@@ -946,6 +947,9 @@ def update_storage():
     recordings = dict([ (id_component("%s_%s" % (recording.chanid,recording.recstartts.strftime('%Y%m%d%H%M%S'))),recording) for recording in recordings ])
     videos     = dict([ (id_component(vid.filename),vid) for vid in videos ])
     
+    def __timecorrect():
+        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+
     for rid in recordings:
         rec = recordings[rid]        
 
@@ -954,15 +958,15 @@ def update_storage():
 
         if rec.recgroup not in recgroups:
             continue
-        
+
         if rid not in mythtv_storage['items'].data:
             duration = (rec.endtime - rec.starttime)
             mythtv_storage['items'].set(rid,notdict({ 'cid' : rid,
                                                       'sid' : recgroups[rec.recgroup],
-                                                      'created-time' : '%sZ' % rec.recendts.isoformat(),
+                                                      'created-time' : '%sZ' % (rec.recendts + __timecorrect()).isoformat(),
                                                       'size' : int(rec.filesize),
                                                       'MYTHTV:chanid' : rec.chanid,
-                                                      'MYTHTV:recstartts' : rec.recstartts,
+                                                      'MYTHTV:recstartts' : rec.recstartts + __timecorrect(),
                                                       'MYTHTV:program' : { 'sid' : recgroups[rec.recgroup],
                                                                            'cid' : rid,
                                                                            'synopsis' : str(rec.description),
@@ -1119,9 +1123,9 @@ def update_acquisitions():
         rec = recordings[rid]
         if rec.recordid in programme_crids:
             mythtv_acquisitions['content-acquisitions'].set( rid, notdict({ 'sid' : '%04d' % int(rec.chanid),
-                                                                            'cid' : id_component('%sZ' % rec.starttime.isoformat()),
-                                                                            'start' : rec.starttime,
-                                                                            'end' : rec.endtime,
+                                                                            'cid' : id_component('%sZ' % (rec.starttime + __timecorrect()).isoformat()),
+                                                                            'start' : rec.starttime + __timecorrect(),
+                                                                            'end' : rec.endtime + __timecorrect(),
                                                                             'global-content-id' : 'crid://%s' % programme_crids[rec.recordid],
                                                                             'active' : False,
                                                                             'interactive' : False,
@@ -1133,9 +1137,9 @@ def update_acquisitions():
                                                                           notify=mythtv_acquisition_notify))
         elif rec.recordid in series_used_ids:
             mythtv_acquisitions['content-acquisitions'].set( rid, notdict({ 'sid' : '%04d' % int(rec.chanid),
-                                                                            'cid' : id_component('%sZ' % rec.starttime.isoformat()),
-                                                                            'start' : rec.starttime,
-                                                                            'end' : rec.endtime,
+                                                                            'cid' : id_component('%sZ' % (rec.starttime + __timecorrect()).isoformat()),
+                                                                            'start' : rec.starttime + __timecorrect(),
+                                                                            'end' : rec.endtime + __timecorrect(),
                                                                             'series-id' : (mythtv_acquisitions['series-acquisitions']['%03d' % rec.recordid]['series-id']),
                                                                             'interactive' : False,
                                                                             'series-linked' : True,
@@ -1146,9 +1150,9 @@ def update_acquisitions():
                                                                           notify=mythtv_acquisition_notify))
         else:
             mythtv_acquisitions['content-acquisitions'].set(rid, notdict({ 'sid' : '%04d' % int(rec.chanid),
-                                                                           'cid' : id_component('%sZ' % rec.starttime.isoformat()),
-                                                                           'start' : rec.starttime,
-                                                                           'end' : rec.endtime,
+                                                                           'cid' : id_component('%sZ' % (rec.starttime + __timesorrect()).isoformat()),
+                                                                           'start' : rec.starttime + __timecorrect(),
+                                                                           'end' : rec.endtime + __timecorrect(),
                                                                            'interactice' : False,
                                                                            'series-linked' : False,
                                                                            'active' : False,
@@ -1324,6 +1328,9 @@ class Acquirer:
     def acquire (self,global_content_id=None,cid=None,sid=None,series_id=None,priority=False):
         global mythtv_sources
 
+        def __timecorrect():
+            return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+
         if cid is not None and sid is None:
             return None
         elif sid is not None:
@@ -1342,12 +1349,12 @@ class Acquirer:
 
             try:
                 guides = [ prog for prog in MythDB().searchGuide(chanid=sid,
-                                                                 starttime=start) ]
+                                                                 starttime=start - __timecorrect()) ]
 
             except Exception as inst:
                 uc_server.log_message(traceback.format_exc())
                 guides = [ prog for prog in MythDB().searchGuide(chanid=sid,
-                                                                 starttime=start) ]
+                                                                 starttime=start - __timecorrect()) ]
                 
             global_content_ids = [ guide.programid for guide in guides if guide.programid is not None ]
             if len(global_content_ids) > 0 :
@@ -1430,6 +1437,9 @@ class Acquirer:
             
 
 class Programmes:
+
+    def __timecorrect(self):
+        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
 
     def filterprogrammes(self,generator,params, timestrict=False, textstrict=False):
         if 'text' in params:
@@ -1831,6 +1841,11 @@ class Programmes:
 
     def programme_metadata_for_channel(self,channel,start,end):
         def programme_metadata_for_channel_actual(channel,start,end):
+            
+            start = start - self.__timecorrect()
+            if end is not None:
+                end = end - self.__timecorrect()
+            
             tempstart = start
 
             if end is None:
@@ -1867,13 +1882,13 @@ class Programmes:
         src = "%04d" % guide.chanid
 
         programme = { 'sid' : src,
-                      'cid' : id_component('%sZ' % guide.starttime.isoformat()),
+                      'cid' : id_component('%sZ' % (guide.starttime + self.__timecorrect()).isoformat()),
                       'synopsis' : guide.description,
                       'title' : guide.title,
-                      'start' : guide.starttime,
-                      'presentable-from'   : guide.starttime,
-                      'presentable-until'   : guide.endtime,
-                      'acquirable-until'   : guide.starttime,
+                      'start' : guide.starttime + self.__timecorrect(),
+                      'presentable-from'   : guide.starttime + self.__timecorrect(),
+                      'presentable-until'   : guide.endtime + self.__timecorrect(),
+                      'acquirable-until'   : guide.starttime + self.__timecorrect(),
                       'media-components' : {'audio' : { 'id' : 'audio',
                                                         'type' : 'audio',
                                                         'name' : "Primary Audio",
