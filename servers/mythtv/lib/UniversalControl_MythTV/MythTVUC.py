@@ -1083,6 +1083,9 @@ def update_storage():
 def update_acquisitions():
     global mythtv_acquisitions
 
+    def __timecorrect():
+        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+
     power_rules = dict([ (record.recordid, record) for record in Record.getAllEntries() if record.search == 1L ])
 
     programme_crids = dict()
@@ -1150,7 +1153,7 @@ def update_acquisitions():
                                                                           notify=mythtv_acquisition_notify))
         else:
             mythtv_acquisitions['content-acquisitions'].set(rid, notdict({ 'sid' : '%04d' % int(rec.chanid),
-                                                                           'cid' : id_component('%sZ' % (rec.starttime + __timesorrect()).isoformat()),
+                                                                           'cid' : id_component('%sZ' % (rec.starttime + __timecorrect()).isoformat()),
                                                                            'start' : rec.starttime + __timecorrect(),
                                                                            'end' : rec.endtime + __timecorrect(),
                                                                            'interactice' : False,
