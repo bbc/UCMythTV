@@ -78,7 +78,7 @@ builds an installation tarball.
           sudo apt-get install build-essential libasound2-dev libqt4-dev \
                                pkg-config yasm libdirectfb-dev g++ \
                                qt4-qmake libmp3lame-dev libxxf86vm-dev \
-                               libxinerama-dev python-pycurl
+                               libxinerama-dev python-pycurl python-pyrex
 
    4. To compile the patched MythTV source and create a binary tarball ready for
        installation, run the following commands from a terminal window after
