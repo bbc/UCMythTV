@@ -740,7 +740,7 @@ class UCOutputsResourceHandler(UCResourceHandler):
                 return
 
         def form_output(oid):
-            element = u'<out name="%(name)s" oid="%(oid)s"' % { 'name'     : saxutils.escape(uc_server.outputs[oid]['name']),
+            element = u'<output name="%(name)s" oid="%(oid)s"' % { 'name'     : saxutils.escape(uc_server.outputs[oid]['name']),
                                                                 'oid'      : saxutils.escape(oid) }
             if 'main' in uc_server.outputs[oid] and uc_server.outputs[oid]['main']:
                 element += u' main="true"'
