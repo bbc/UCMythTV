@@ -1593,7 +1593,7 @@ def encodeContent(content, no_locators=False):
         if 'categories' in content and (isinstance(content['categories'],list) or isinstance(content['categories'],tuple)) and len(content['categories']) != 0:
             for category in content['categories']:
                 if isinstance(category,basestring):
-                    string += '<category id="%s"/>' % (str(category),)
+                    string += '<category category-id="%s"/>' % (str(category),)
 
         if 'media-components' in content:
             for id in content['media-components']:
@@ -1630,7 +1630,7 @@ def encodeContent(content, no_locators=False):
                             componentattributes += ' %s="%s"' % (saxutils.escape(key), bool_to_xml_string(comp[key]))
                         except:
                             pass
-                string += '<media-component id="%(id)s" type="%(type)s"%(attributes)s/>' % { 'id'   : id,
+                string += '<media-component mcid="%(id)s" type="%(type)s"%(attributes)s/>' % { 'id'   : id,
                                                                                              'type' : saxutils.escape(str(comp['type'])),
                                                                                              'attributes' : componentattributes }
         if 'controls' in content:
