@@ -1156,7 +1156,7 @@ def update_acquisitions():
                                                                            'cid' : id_component('%sZ' % (rec.starttime + __timecorrect()).isoformat()),
                                                                            'start' : rec.starttime + __timecorrect(),
                                                                            'end' : rec.endtime + __timecorrect(),
-                                                                           'interactice' : False,
+                                                                           'interactive' : False,
                                                                            'series-linked' : False,
                                                                            'active' : False,
                                                                            'MYTHTV:recordid' : rec.recordid,
