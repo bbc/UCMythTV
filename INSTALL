@@ -121,7 +121,7 @@ On your development machine:
       that make up the UC Server into a single tarball with an installation
       script.
 
-   3. Copy the resulting tarball 'UC-confluence-mythtv-install-[date].tar.gz'
+   3. Copy the resulting tarball 'UC-mythtv-install-[date].tar.gz'
       from the ../dist directory onto the USB stick
 
 
