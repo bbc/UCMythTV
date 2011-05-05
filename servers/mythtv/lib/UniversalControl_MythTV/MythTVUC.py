@@ -652,6 +652,9 @@ def update_output(myth_menu_locations):
     global mythtv_outputs
     global mythtv_storage
     global uc_server
+    
+    def __timecorrect():
+        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
 
     now = datetime.datetime.utcnow()
     query = sendQuery('location')
@@ -715,7 +718,7 @@ def update_output(myth_menu_locations):
                         pass
                     else:
                         if re.match('LiveTV ', query[9:]):
-                            pid = id_component('%sZ' % match.group(7))
+                            pid = id_component('%sZ' % (parse_iso(match.group(7)) + __timecorrect()).isoformat())
                             if mythtv_outputs['0'].data['programme'] != (id,pid,media_components):
                                 mythtv_outputs['0'].set('programme',(id,pid,media_components))
                                 mythtv_outputs['0'].set('app',None)
