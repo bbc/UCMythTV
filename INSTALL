@@ -157,7 +157,7 @@ For each target machine you want to install on:
    4. Quit the MythTV front-end by pressing Esc at the main menu.
 
    5. Open up a terminal window, mount the usb stick, copy the
-      'UC-confluence-mythtv-install-[date].tar.gz' tarball you created earlier
+      'UC-mythtv-install-[date].tar.gz' tarball you created earlier
        into a suitable directory on the hard disk of the target machine, and
        uncompress it.
 
