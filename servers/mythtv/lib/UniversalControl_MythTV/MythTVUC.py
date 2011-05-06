@@ -255,16 +255,12 @@ def mythtv_output_setter(key,item):
             timestamp = datetime.datetime.utcnow()
             diff = timestamp - item['aposition']['position_timestamp']
 
-            print "REQ: %r\nSRV: %r\nDIF: %r" % (item['aposition']['position_timestamp'], timestamp, diff)
-
             try:
                 speed = float(mythtv_outputs['0']['playhead']['playback'])
             except:
                 speed = 1.0
 
             pos = int(item['aposition']['position'] + speed*(float(86400*diff.days) + float(diff.seconds) + float(diff.microseconds)/1000000.0)) - FIXED_POSITION_OFFSET
-
-            print "POS: %r" % (pos,)
 
             if not sendPlay('seek %02d:%02d:%02d' % (pos//3600,(pos//60)%60,pos%60)):
                 raise ProcessingFailed
@@ -1626,7 +1622,7 @@ class Programmes:
             else:
                 raise CannotFind()
 
-            generators.append(generator)
+            generators.append(generator)        
 
         return  [ self.select_results(self.filterprogrammes(generator,params),params['results'])
                   for generator in generators ]
@@ -1826,6 +1822,8 @@ class Programmes:
                     }
 
     def programme_metadata_for_gids(self,gcid=None,gsid=None,start=None,end=None):
+        global uc_server
+    
         if gcid is not None:
             gcid = gcid[7:]
         if gsid is not None:
@@ -1836,7 +1834,7 @@ class Programmes:
                                           programid=gcid,
                                           seriesid=gsid)
         except:
-            print traceback.format_exc()
+            uc_server.log_message(traceback.format_exc())
             guides = []        
 
         for guide in guides:
@@ -1860,7 +1858,9 @@ class Programmes:
                 guides = MythDB().searchGuide(endafter=tempstart,startbefore=tempend,chanid=channel)
             except:
                 guides = []
-
+                
+            guides = [ guide for guide in guides ]
+                
             while True:
                 n = 0
                 for guide in guides:
@@ -1882,25 +1882,34 @@ class Programmes:
         """This method takes a MythTV Guide object and returns a UCServer compatible dictionary
         containing the programme data."""
 
+        global uc_server
+              
         src = "%04d" % guide.chanid
 
-        programme = { 'sid' : src,
-                      'cid' : id_component('%sZ' % (guide.starttime + self.__timecorrect()).isoformat()),
-                      'synopsis' : guide.description,
-                      'title' : guide.title,
-                      'start' : guide.starttime + self.__timecorrect(),
-                      'presentable-from'   : guide.starttime + self.__timecorrect(),
-                      'presentable-until'   : guide.endtime + self.__timecorrect(),
-                      'acquirable-until'   : guide.starttime + self.__timecorrect(),
-                      'media-components' : {'audio' : { 'id' : 'audio',
-                                                        'type' : 'audio',
-                                                        'name' : "Primary Audio",
-                                                        'default' : True,
-                                                        },
-                                            },
-                      'interactive' : False,
-                      }
-
+        try:
+            programme = { 'sid' : src,
+                          'cid' : id_component('%sZ' % (guide.starttime + self.__timecorrect()).isoformat()),
+                          'synopsis' : guide.description,
+                          'title' : guide.title,
+                          'start' : guide.starttime + self.__timecorrect(),
+                          'presentable-from'   : guide.starttime + self.__timecorrect(),
+                          'presentable-until'  : guide.endtime + self.__timecorrect(),
+                          'presentable' : guide.starttime < datetime.datetime.now() < guide.endtime,
+                          'acquirable-until'   : guide.starttime + self.__timecorrect(),
+                          'acquirable'  : guide.starttime > datetime.datetime.now(),
+                          'media-components' : {'audio' : { 'id' : 'audio',
+                                                            'type' : 'audio',
+                                                            'name' : "Primary Audio",
+                                                            'default' : True,
+                                                            },
+                                                },
+                          'interactive' : False,
+                          }
+        except:
+            uc_server.log_message(traceback.format_exc())
+            raise
+            
+        
         duration = (guide.endtime - guide.starttime)
         programme['duration'] = int((duration.days*86400 + duration.seconds)*10000 + duration.microseconds//100)
 
