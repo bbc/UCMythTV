@@ -1851,6 +1851,10 @@ class UCSearchOutputsIdResourceHandler(UCResourceHandler):
 
         term = self.path[-1]
 
+        if term == 'main':
+            term = [out for out in uc_server.outputs if 'main' in uc_server.outputs[out]][0]
+            print "Found main output id %s" % term
+        
         if term not in uc_server.outputs:
             raise CannotFind
 
