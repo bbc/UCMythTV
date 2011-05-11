@@ -31,9 +31,11 @@ This module exports an object via dbus with busname uk.co.bbc.UniversalControl, 
 import dbus_core
 import dbus
 import dbus.service
+import datetime
 
 feedback_data = {
     'resource' : 'uc/feedback',
+    'timestamp' : datetime.datetime.utcnow(),
     'feedback' : ''
     }
 
@@ -54,8 +56,6 @@ class Feedback(dbus.service.Object):
                          out_signature="")
     def setFeedbackText(self,feedback):
         global feedback_data
-        if feedback_data['feedback'] != feedback:
-            feedback_data['feedback'] = feedback
-            self.uc_server.notify_change('uc/feedback')
-        else:
-            feedback_data['feedback'] = feedback
+        feedback_data['feedback'] = feedback
+        feedback_data['timestamp'] = datetime.datetime.utcnow()
+        self.uc_server.notify_change('uc/feedback')
