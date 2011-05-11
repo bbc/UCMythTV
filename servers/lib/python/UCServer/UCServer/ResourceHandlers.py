@@ -1337,13 +1337,14 @@ class UCFeedbackResourceHandler(UCResourceHandler):
     which has a key 'feedback' which is a string. This object may be replaced with a dictionary-like object of the form
 
     data= { 'resource' : 'uc/feedback',
+            'timestamp' : datetime.datetime,
             'feedback' : STRING,
             }
 
     The contents of the feedback string are entity-encoded before being returned."""
 
     representation = """\
-<response resource="%(resource)s"><feedback%(content)s></response>
+<response resource="%(resource)s"><feedback time="%(timestamp)s"%(content)s></response>
 """
 
     data = { 'resource' : 'uc/feedback',
@@ -1359,9 +1360,17 @@ class UCFeedbackResourceHandler(UCResourceHandler):
         content = '/'
         if 'feedback' in self.data and isinstance(self.data['feedback'],basestring) and self.data['feedback'] != '':
             content = '>%s</feedback' % saxutils.escape(str(self.data['feedback']))
-            
+        
+        timestamp = saxutils.escape('%sZ' % datetime.datetime.utcnow().isoformat())
+        print "Got here"
+        if 'timestamp' in self.data and isinstance(self.data['timestamp'],datetime.datetime):
+            print "Got here too"
+            timestamp = saxutils.escape('%sZ' % self.data['timestamp'].isoformat())
+        
         self.return_body(self.representation % {'resource' : self.data['resource'] % {'id' : saxutils.escape(str(id))} + self.reconstructParams(),
-                                                'content'  : content})
+                                                'content'  : content,
+                                                'timestamp'     : timestamp
+                                                })
         return    
 
 class UCSourceListsResourceHandler(UCResourceHandler):
@@ -1851,6 +1860,10 @@ class UCSearchOutputsIdResourceHandler(UCResourceHandler):
 
         term = self.path[-1]
 
+        if term == 'main':
+            term = [out for out in uc_server.outputs if 'main' in uc_server.outputs[out]][0]
+            print "Found main output id %s" % term
+        
         if term not in uc_server.outputs:
             raise CannotFind
 
