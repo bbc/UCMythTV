@@ -1362,9 +1362,7 @@ class UCFeedbackResourceHandler(UCResourceHandler):
             content = '>%s</feedback' % saxutils.escape(str(self.data['feedback']))
         
         timestamp = saxutils.escape('%sZ' % datetime.datetime.utcnow().isoformat())
-        print "Got here"
         if 'timestamp' in self.data and isinstance(self.data['timestamp'],datetime.datetime):
-            print "Got here too"
             timestamp = saxutils.escape('%sZ' % self.data['timestamp'].isoformat())
         
         self.return_body(self.representation % {'resource' : self.data['resource'] % {'id' : saxutils.escape(str(id))} + self.reconstructParams(),

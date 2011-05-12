@@ -75,7 +75,7 @@ class UCHTTPServer (SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     def close_request(self, request):
         return BaseHTTPServer.HTTPServer.close_request(self,request[1])
 
-class UCHandler (UCAuthenticationServer.UCAuthenticationAndRestrictionRequestHandler, BasicCORSServer.CORSRequestHandler):
+class UCHandler (BasicCORSServer.CORSRequestHandler, UCAuthenticationServer.UCAuthenticationAndRestrictionRequestHandler):
     """This class is the HTTPRequestHandler used by the Universal Control server. It descends ftom HTTPDigestAuthenticationRequestHandler because it needs to 
     support digest authentication for the security scheme.
 
