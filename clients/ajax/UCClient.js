@@ -16,7 +16,7 @@ Copyright 2011 British Broadcasting Corporation
 */
 
 // This is a simple javascript client for UC which will work
-// with server version 0.5.1
+// with server version 0.6.0
 
 var uc_base_uri_default = "http://localhost:48875";
 var uc_base_uri = uc_base_uri_default;
@@ -54,7 +54,7 @@ function connect_to_server() {
     $('#enter-pairing-code-dialogue').dialog("close");
     $('#connecting-status-dialogue').dialog("open");
     
-    uc_base_uri = decode_pairing_code($('#pairing-code').val());
+    uc_base_uri = PairingCode.decode($('#pairing-code').val()).url;
 
     make_initial_connection();    
 };
@@ -115,7 +115,7 @@ function process_base_resource(xml) {
 	    // here we extract the version and check it against the version this client was designed for
 
 	    version = $(this).attr('version');
-	    if(!version.match(/^0\.5\.1$/)) {
+	    if(!version.match(/^0\.6\.0$/)) {
 		alert("Server Version is incompatible with this client! Canceling connection");
 		good = false;
 	    } else if ($(this).attr('security-scheme') == 'true') {
@@ -584,136 +584,122 @@ function extract_time_plus(iso,duration) {
 }
 
 
-// This code decodes pairing codes
-function decode_pairing_code(code) {
-    code_reset(code);
-    
-    signal = get_codebits(2);
+var PairingCode = {
 
-    if (signal%2 == 1) {
-	throw Exception;
-    }
+	//This function is used to decode a pairing code.
+	decode : function decoder(code) {
 
-    if ((signal >> 1) == 1) {
-	CP = get_codebits(16);
-    }
+		var current_code = "";
+		var code_index = 0;
+		var overflow_bits = 0;
+		var current_multiplier = 1;
 
-    signal = get_codebits(2);
+		var code_reset = function(code) {
+			current_code = code;
+			code_index = code.length - 1;
+			overflow_bits = 0;
+			current_multiplier = 1;
+		};
 
-    if (signal == 0) {
-	A = 192;
-	B = 168;
+        var stringChars = new Array(
+        '0','1','2','3','4','5','6','7',
+        '8','9','A','B','C','D','E','F',
+        'G','H','J','K','M','N','P','Q',
+        'R','S','T','V','W','X','Y','Z'
+        );
 
-	signal = get_codebits(2);
+		var get_codebits = function(bits) {
 
-	if (signal == 0) {
-	    C = 0;
-	} else if (signal == 1) {
-	    C = 1;
-	} else if (signal == 2) {
-	    C = 2;
-	} else {
-	    C = get_codebits(8);
-	}
+		    while (code_index >= 0 && (current_multiplier % (1 << bits)) != 0) {
+			digit = stringChars.indexOf(current_code.charAt(code_index));
+			code_index = code_index - 1;	
+			overflow_bits = overflow_bits + current_multiplier*digit;
+			current_multiplier = current_multiplier*32;
+		    }
+		    
+		    output = overflow_bits % (1 << bits);
+		    overflow_bits = overflow_bits >>> bits;
+		    current_multiplier = current_multiplier >>> bits;
+		    return output;
+		};
 
-	D = get_codebits(8);
-    } else if (signal == 1) {
-	A = 172;
-	D = get_codebits(8);
-	C = get_codebits(8);
-	B = get_codebits(4) + 16;
-    } else if (signal == 2) {
-	A = 10;
-	D = get_codebits(8);
-	C = get_codebits(8);
-	B = get_codebits(8);
-    } else {
-	D = get_codebits(8);
-	C = get_codebits(8);
-	B = get_codebits(8);
-	A = get_codebits(8);
-    }
+		var signal;
+		var SSS;
+		var A;
+		var B;
+		var C;
+		var D;
+		var port;
 
-    signal = get_codebits(1);
-    if (signal == 0) {
-	port = 48875;
-    } else {
-	port = get_codebits(16);
-    }
+		code_reset(code);
+		    
+		var signal = get_codebits(2);
 
-    if (get_codebits(16) != 0) {
-	throw Exception;
-    }
+		if (signal%2 == 1) {
+			throw "error in pairing code parsing";
+		}
 
-    address = "http://" + A + "." + B + "." + C + "." + D + ":" + port;
-    return address;
+		if ((signal >> 1) == 1) {
+			SSS = get_codebits(8);
+		}
+
+		signal = get_codebits(2);
+
+		if (signal == 0) {
+			A = 192;
+			B = 168;
+
+			signal = get_codebits(2);
+
+			if (signal == 0) {
+				C = 0;
+			} else if (signal == 1) {
+				C = 1;
+			} else if (signal == 2) {
+				C = 2;
+			} else {
+				C = get_codebits(8);
+			}
+
+			D = get_codebits(8);
+		} else if (signal == 1) {
+			A = 172;
+			D = get_codebits(8);
+			C = get_codebits(8);
+			B = get_codebits(4) + 16;
+		} else if (signal == 2) {
+			A = 10;
+			D = get_codebits(8);
+			C = get_codebits(8);
+			B = get_codebits(8);
+		} else {
+			D = get_codebits(8);
+			C = get_codebits(8);
+			B = get_codebits(8);
+			A = get_codebits(8);
+		}
+
+		signal = get_codebits(1);
+		if (signal == 0) {
+			port = 48875;
+		} else {
+			port = get_codebits(16);
+		}
+
+		if (get_codebits(16) != 0) {
+			throw "error in pairing code parsing";
+		}
+
+		return {
+			url: "http://" + A + "." + B + "." + C + "." + D + ":" + port,
+			sss: SSS,
+			};
+
+	},
+
+
+
 };
-
-var current_code = "";
-var code_index = 0;
-var overflow_bits = 0;
-var current_multiplier = 1;
-
-
-function code_reset(code) {
-    current_code = code;
-    code_index = code.length - 1;
-    overflow_bits = 0;
-    current_multiplier = 1;
-}
-
-function get_codebits(bits) {
-
-    while (code_index >= 0 && (current_multiplier % (1 << bits)) != 0) {
-	digit = dd_to_int(current_code[code_index]);
-	code_index = code_index - 1;	
-	overflow_bits = overflow_bits + current_multiplier*digit;
-	current_multiplier = current_multiplier*12;
-    }
-    
-    output = overflow_bits % (1 << bits);
-    overflow_bits = overflow_bits >>> bits;
-    current_multiplier = current_multiplier >>> bits;
-    return output;
-}
-
-
-function dd_to_int(digit) {
-    if (digit == 1)
-	return 1;
-    if (digit == 2)
-	return 2;
-    if (digit == 3)
-	return 3;
-    if (digit == 4)
-	return 4;
-    if (digit == 5)
-	return 5;
-    if (digit == 6)
-	return 6;
-    if (digit == 7)
-	return 7;
-    if (digit == 8)
-	return 8;
-    if (digit == 9)
-	return 9;
-    if (digit == 0)
-	return 0;
-    if (digit == '*') 
-	return 10;
-    if (digit == '#')
-	return 11;
-    return;
-};
-
-
-
-
-
-
-
-
-
 
 
 

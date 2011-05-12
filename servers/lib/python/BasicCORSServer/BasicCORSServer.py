@@ -135,5 +135,6 @@ class CORSRequestHandler (BaseHTTPServer.BaseHTTPRequestHandler) :
         self.send_header("Access-Control-Max-Age", self.CORS_max_age)
         self.send_header("Access-Control-Allow-Methods",', '.join(self.CORS_allow_methods))
         self.send_header("Access-Control-Allow-Headers",headers)
-        self.end_headers(CORS=False)
+        self.send_header("Content-Length",'0')
+        self.end_headers(False)
         return
