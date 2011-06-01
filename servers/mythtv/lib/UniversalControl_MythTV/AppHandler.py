@@ -145,7 +145,7 @@ class Apps(dbus.service.Object):
         self.uc_server.set_application_activater(self)
         MythTVUC.extra_sources[self.__sid] = self
         MythTVUC.mythtv_sources[self.__sid] = { 'id'    : self.__sid,
-                                                'name'  : "External Applications registered via dbus",
+                                                'name'  : "Applications",
                                                 'live'  : False,
                                                 'linear': False,
                                                 'follow-on' : False,

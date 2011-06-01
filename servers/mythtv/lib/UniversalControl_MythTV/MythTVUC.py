@@ -382,7 +382,7 @@ def initialise(server,logo=None):
                     mythtv_images['files'][('images','sources','%s.%s' % (id,image_types[ext][0]))] = (mythtv_sources[id]['MYTHTV:icon'],image_types[ext][1])
 
     mythtv_sources['mythtv'] = notdict({ 'id'          : 'mythtv',
-                                         'name'        : 'The MythTV Menus',
+                                         'name'        : 'MythTV Menus',
                                          'live'        : False,
                                          'linear'      : False,
                                          'follow-on'   : False,
@@ -393,7 +393,7 @@ def initialise(server,logo=None):
                                        notify=mythtv_source_notify('mythtv'))
 
     mythtv_sources['mythgame'] = notdict({ 'id'          : 'mythgame',
-                                           'name'        : 'Games Supported by MythGame',
+                                           'name'        : 'Games',
                                            'live'        : False,
                                            'linear'      : False,
                                            'follow-on'   : False,
@@ -403,7 +403,7 @@ def initialise(server,logo=None):
     
     mythtv_source_lists = { 'uc_default' : { 'list-id' : 'uc_default',
                                              'name' : 'Default',
-                                             'description' : "The default list of sources",
+                                             'description' : "Default list of sources",
                                              'sources' : filter(lambda x : True,
                                                              mythtv_sources.keys()),
                                           },
@@ -886,7 +886,7 @@ def update_storage():
     if '1' in groups:
         group = groups['1']
         sources.append({ 'id'   : 'SG_1',
-                         'name' : "Recordings Stored by MythTV",
+                         'name' : "Recorded Programmes",
                          'sref' : 'myth:%s@%s%s' % (group.groupname,
                                                     uc_server.ip_address(),
                                                     group.dirname,),
