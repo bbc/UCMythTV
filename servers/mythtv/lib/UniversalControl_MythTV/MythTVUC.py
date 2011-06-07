@@ -883,7 +883,7 @@ def update_storage():
     if '1' in groups:
         group = groups['1']
         sources.append({ 'id'   : 'SG_1',
-                         'name' : "Recordings Stored by MythTV",
+                         'name' : "Recorded Programmes",
                          'sref' : 'myth:%s@%s%s' % (group.groupname,
                                                     uc_server.ip_address(),
                                                     group.dirname,),
@@ -897,7 +897,7 @@ def update_storage():
     if '2' in groups:
         group = groups['2']
         sources.append({ 'id'   : 'SG_2',
-                         'name' : "Videos Stored by MythTV",
+                         'name' : "Video Files",
                          'sref' : 'myth:%s@%s%s' % (group.groupname,
                                                     uc_server.ip_address(),
                                                     group.dirname,),
@@ -970,6 +970,7 @@ def update_storage():
                                                                            'pref'  : str(rec.filename).replace('127.0.0.1',uc_server.ip_address()),
                                                                            'duration' : int((duration.days*86400 + duration.seconds)*10000 + duration.microseconds//100),
                                                                            'interactive' : False,
+                                                                           'presentable' : True,
                                                                            'media-components' : {'audio' : { 'id' : 'audio',
                                                                                                              'type' : 'audio',
                                                                                                              'name' : "Primary Audio",
@@ -1044,6 +1045,8 @@ def update_storage():
                                                                               'cid' : vidid,
                                                                               'synopsis' : str(vid.tagline),
                                                                               'title' : str(vid.title),
+                                                                              'interactive' : False,
+                                                                              'presentable' : True,
                                                                               'media-components' : {'audio' : { 'id' : 'audio',
                                                                                                                 'type' : 'audio',
                                                                                                                 'name' : "Primary Audio",
