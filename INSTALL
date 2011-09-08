@@ -7,7 +7,7 @@ The instructions here cover:
  * how to set up a machine from scratch using that USB stick
  * how to later install just UC server (eg. if a new version)
 
-At present (Feb 2011) UC Server requires a slightly patched version of
+At present (September 2011) UC Server requires a slightly patched version of
 MythTV. Installation therefore requires the building of a customised
 build of MythTV.
 
@@ -15,8 +15,11 @@ In the following steps, we assume that you have a 'development machine'
 available, which is a computer capable of running the necessary software
 to prepare the customised build of MythTV and copy it onto a USB stick.  The
 authors have successfully used development machines running MacOS X and Ubuntu
-Linux.  The use of other platforms (such as Windows and CygWin) may also be
-possible.
+Linux 10.04.  The use of other platforms (such as Windows and CygWin) may also
+be possible.  It is vital to ensure that the same versions of the libraries on
+which MythTV depends are used for the compilation process: one easy way to
+achieve this is to perform the compilation on a machine running the same
+operating system version as the 'target machine' described below.
 
 We also assume that you have a 'target machine', which is a second
 computer with a built-in or attached DVB-T tuner, on which you wish to install
