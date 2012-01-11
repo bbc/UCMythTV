@@ -650,7 +650,7 @@ def update_output(myth_menu_locations):
     global uc_server
     
     def __timecorrect():
-        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+        return datetime.timedelta(seconds=(time.timezone if time.localtime().tm_isdst==0 else time.altzone))
 
     now = datetime.datetime.utcnow()
     query = sendQuery('location')
@@ -947,7 +947,7 @@ def update_storage():
     videos     = dict([ (id_component(vid.filename),vid) for vid in videos ])
     
     def __timecorrect():
-        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+        return datetime.timedelta(seconds=(time.timezone if time.localtime().tm_isdst==0 else time.altzone))
 
     for rid in recordings:
         rec = recordings[rid]        
@@ -1086,7 +1086,7 @@ def update_acquisitions():
     global mythtv_acquisitions
 
     def __timecorrect():
-        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+        return datetime.timedelta(seconds=(time.timezone if time.localtime().tm_isdst==0 else time.altzone))
 
     power_rules = dict([ (record.recordid, record) for record in Record.getAllEntries() if record.search == 1L ])
 
@@ -1334,7 +1334,7 @@ class Acquirer:
         global mythtv_sources
 
         def __timecorrect():
-            return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+            return datetime.timedelta(seconds=(time.timezone if time.localtime().tm_isdst==0 else time.altzone))
 
         if cid is not None and sid is None:
             return None
@@ -1444,7 +1444,7 @@ class Acquirer:
 class Programmes:
 
     def __timecorrect(self):
-        return datetime.timedelta(seconds=(time.timezone if time.daylight==0 else time.altzone))
+        return datetime.timedelta(seconds=(time.timezone if time.localtime().tm_isdst==0 else time.altzone))
 
     def filterprogrammes(self,generator,params, timestrict=False, textstrict=False):
         if 'text' in params:
