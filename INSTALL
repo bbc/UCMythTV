@@ -185,6 +185,9 @@ which was developed for use on Asus 'EeeBox' target machines. To use it, run:
 
         scripts/enable_hdmi_audio.sh
 
+If you wish to apply the script to a machine without having to build or use a UC installation tarball, it can be found in the repository at the following location:
+
+        $REPO_ROOT/servers/platform_extras/mythtv/scripts/setup_hdmi_audio.sh
 
 
 Installing/updating just the UC Server
