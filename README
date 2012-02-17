@@ -7,18 +7,36 @@ The protocol is specified in BBC R&D White Paper 194:
 
 < http://www.bbc.co.uk/rd/publications/whitepaper194.shtml >
 
-The idea is that a TV/set-top-box runs a UC server that implements the API.
-And client devices communicate with the TV/set-top-box via that API. Because
-it is a web based API, clients could be anything from a mobile phone app, to
-javascript within a web page.
+A set-top box or other media device runs a UC server that implements the API,
+and client devices communicate with the TV/set-top-box via it. Because
+it is a web based API, clients could be implemented on a wide range of platforms:
+anything from a mobile phone app to a dynamic web page.
 
-The code here are prototype implementations of Universal Control API clients
-and servers:
+The Universal Control API has been designed with two main kinds of use case in mind:
+ * Remote control applications running on remote devices such as mobile phones
+   and tablets: the UC approach allows the design of the remote APIs to be
+   completely customised to take into account the capabilities of specific devices
+   or the requirements of particular groups of users, such as people with disabilities.
+   The API is complementary in this regard to industry standard remote UI approaches
+   such as DLNA RUI or RVU.
+ * Enhanced media experiences under the control of broadcasters and other
+   content providers, in which parts of a single media experience are presented on
+   multiple devices.  The media industry is currently interested in the idea of 
+   "Dual Screen" experiences: the UC API addresses these by providing a distributed,
+   scalable way to synchronise the devices taking part in such an experience, and
+   supports more advanced use cases that involve content-provider-authored
+   applications running on the set-top box as well as on the client devices.
 
- * A MythTV based prototype server
- * Prototype client(s)
+The source files in this repository comprise prototype implementations of
+Universal Control API clients and servers:
 
-This software is provided for example purposes only, and we provide no guarantee of it being free from bugs. We do not recommend its use in any mission-critical environments.
+ * A MythTV-based example server implementation
+ * An example remote control client implementation, implemented in HTML,
+   Javascript and CSS.
+
+This software is provided for example purposes only, and we provide no guarantee
+of it being free from bugs. We do not recommend its use in any mission-critical
+environments.
 
 
 
@@ -32,8 +50,8 @@ the INSTALL file for detailed instructions on how to get it up and running.
 The client is a simple web based client that requires no installation
 process. See the README file in its directory.
 
-There are also some utilities - such as a tool for creating and decoding
-'pairing codes'.
+The repository also contains some utilities - such as a tool for creating and
+decoding 'pairing codes'.
 
 
 
@@ -43,9 +61,9 @@ Overview of files:
 /scripts   ... scripts for packaging up UC server and components into
                tarballs for easy installation.
 
-/clients   ... example clients
+/clients   ... example client(s)
 
-/servers   ... code for UC servers
+/servers   ... code for UC server
 
 /servers/lib/python   ... various libraries needed by the UC server,
                           including core UC server code that can be reused
