@@ -16,8 +16,9 @@ The Universal Control API has been designed with two main kinds of use case in m
  * Remote control applications running on remote devices such as mobile phones
    and tablets: the UC approach allows the design of the remote APIs to be
    completely customised to take into account the capabilities of specific devices
-   or the requirements of particular groups of users, such as people with disabilities.
-   The API is complementary in this regard to industry standard remote UI approaches
+   or the requirements of particular groups of users, such as people with
+   disabilities.
+   The API is complementary in this regard to other industry remote UI approaches
    such as DLNA RUI or RVU.
  * Enhanced media experiences under the control of broadcasters and other
    content providers, in which parts of a single media experience are presented on
