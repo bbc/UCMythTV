@@ -53,6 +53,8 @@ import BaseHTTPServer
 import SocketServer
 import datetime
 import traceback
+from urlparse import urlparse, parse_qs, parse_qsl, ParseResult
+from urllib import unquote
 
 #imports from elsewhere in this project
 import UCAuthenticationServer
@@ -157,28 +159,15 @@ class UCHandler (BasicCORSServer.CORSRequestHandler, UCAuthenticationServer.UCAu
         path = self.path
         query = ''
         try:
-            if path.count('?') != 0:
-                (path,query) = path.split('?',1)
-                try:                    
-                    queries = query.split('&')
-                except:
-                    pass
-                else:
-                    for q in queries:
-                        try:
-                            (key,value) = q.split('=',1)
-                            if key not in params:
-                                params[key] = []
-                            params[key].append(value)                
-                        except:
-                            continue
-                query = '?' + query
+            parse = urlparse(path)
+            path = parse.path
+            query = '?' + unquote(parse.query)
+            params = parse_qs(parse.query)
         except:
             pass
 
         return (path.strip('/').split('/'),query,params)
 
-    
     def handle_one_request(self):
         """This function is overriden to dispatch slightly differently from the default.
         Whilst the default version calls do_{VERB} if it is available this version instead calls do_OPTIONS for OPTIONS requests, and do for all other requests. It also records the received time on the request."""
